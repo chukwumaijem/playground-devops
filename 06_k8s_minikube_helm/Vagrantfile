@@ -41,3 +41,17 @@ end
 # Idea is to convert the resources in the k8s-specifications repo to helm charts,
 # and then packages, sign, and install them using helm.
 # https://github.com/dockersamples/example-voting-app/tree/main/k8s-specifications
+
+
+# Only needed because of the VM Setup
+# Use the command below to proxy the kubernetes API server in the VM
+# kubectl proxy --address=0.0.0.0 --disable-filter=true
+# Then open the k8s dashboard at
+# http://192.168.56.6:8001/api/v1/namespaces/kubernetes-dashboard/services/http:kubernetes-dashboard:/proxy/
+
+
+# Only needed because of the VM Setup
+# Run `minikube ip` to get the ip of the VM
+# To access the service url from the host machine of the VM, run the following command
+# ssh -g -N -L 8080:minikube_ip:node_port_of_service -i .vagrant/machines/default/virtualbox/private_key vagrant@192.168.56.6
+# Then open the url http://localhost:8080 in the browser
