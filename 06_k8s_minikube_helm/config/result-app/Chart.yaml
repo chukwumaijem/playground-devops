@@ -1,6 +1,6 @@
 apiVersion: v2
-name: vote-app
-description: Voting App interface from the Docker Samples
+name: result-app
+description: Result Service for the Voting App
 
 # A chart can be either an 'application' or a 'library' chart.
 #
