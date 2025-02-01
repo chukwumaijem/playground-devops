@@ -2,7 +2,7 @@ Vagrant.configure("2") do |config|
   config.vm.box = "ubuntu/jammy64"
 
   config.vm.provider "virtualbox" do |v|
-    v.name = "k8s-minikube-helm"
+    v.name = "06_k8s-minikube-helm"
     v.memory = 2048
     v.cpus = 2
   end
@@ -11,6 +11,7 @@ Vagrant.configure("2") do |config|
   end
 
   config.vm.provision "shell", inline: <<-SHELL
+    # Install kubectl
     sudo apt-get update
     sudo apt-get install -y apt-transport-https ca-certificates curl gnupg
     curl -fsSL https://pkgs.k8s.io/core:/stable:/v1.32/deb/Release.key | sudo gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg
@@ -22,8 +23,14 @@ Vagrant.configure("2") do |config|
     sudo apt-get update
     sudo apt-get install -y kubectl
 
+    # Install Minikube
     curl -LO https://github.com/kubernetes/minikube/releases/latest/download/minikube-linux-amd64
     sudo install minikube-linux-amd64 /usr/local/bin/minikube && rm minikube-linux-amd64
+
+    # Install Helm
+    curl -fsSL -o get_helm.sh https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3
+    chmod 700 get_helm.sh
+    ./get_helm.sh
   SHELL
 
   config.vm.synced_folder "./config", "/home/vagrant/config"

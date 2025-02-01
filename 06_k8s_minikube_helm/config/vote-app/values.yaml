@@ -1,0 +1,15 @@
+app:
+  name: 'vote'
+
+image:
+  repository: dockersamples/examplevotingapp_vote
+  pullPolicy: IfNotPresent
+  tag: ''
+
+replicaCount: 1
+
+service:
+  name: 'vote-service'
+  type: NodePort
+  port: 8080
+  nodePort: 30001
