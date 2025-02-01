@@ -1,0 +1,22 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    {{ include "result-ui-labels" . }}
+  name: {{ .Values.apps.result_ui.name }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      {{ include "result-ui-labels" . }}
+  template:
+    metadata:
+      labels:
+        {{ include "result-ui-labels" . }}
+    spec:
+      containers:
+        - image: "{{ .Values.apps.result_ui.image.repository }}:{{ .Values.apps.result_ui.image.tag | default "latest" }}"
+          name: {{ .Values.apps.result_ui.name }}
+          ports:
+            - containerPort: 80
+              name: {{ .Values.apps.result_ui.name }}

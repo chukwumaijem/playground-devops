@@ -1,0 +1,19 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    {{ include "worker-labels" . }}
+  name: {{ .Values.apps.worker.name }}
+spec:
+  replicas: {{ .Values.apps.worker.replicaCount }}
+  selector:
+    matchLabels:
+      {{ include "worker-labels" . }}
+  template:
+    metadata:
+      labels:
+        {{ include "worker-labels" . }}
+    spec:
+      containers:
+        - image: "{{ .Values.apps.worker.image.repository }}:{{ .Values.apps.worker.image.tag | default "latest" }}"
+          name: {{ .Values.apps.worker.name }}

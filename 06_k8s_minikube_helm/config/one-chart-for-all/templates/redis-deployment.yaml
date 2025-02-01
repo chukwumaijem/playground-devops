@@ -1,0 +1,28 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    {{ include "redis-labels" . }}
+  name: {{ .Values.apps.redis.name }}
+spec:
+  replicas: {{ .Values.apps.redis.replicaCount }}
+  selector:
+    matchLabels:
+      {{ include "redis-labels" . }}
+  template:
+    metadata:
+      labels:
+        {{ include "redis-labels" . }}
+    spec:
+      containers:
+        - image: "{{ .Values.apps.redis.image.repository }}:{{ .Values.apps.redis.image.tag | default "latest" }}"
+          name: {{ .Values.apps.redis.name }}
+          ports:
+            - containerPort: 6379
+              name: {{ .Values.apps.redis.name }}
+          volumeMounts:
+            - mountPath: /data
+              name: {{ .Values.apps.redis.volumeName }}
+      volumes:
+        - name: {{ .Values.apps.redis.volumeName }}
+          emptyDir: {}

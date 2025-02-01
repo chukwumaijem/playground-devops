@@ -1,0 +1,19 @@
+{{- range $service := .Values.apps.database.service }}
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    {{ include "db-labels" $ }}
+  name: {{ $.Values.apps.database.name }}-service
+spec:
+  type: {{ $service.type }}
+  ports:
+    - name: {{ $service.name }}
+      port: 5432
+      targetPort: 5432
+      {{- if eq $service.type "NodePort" }}
+      nodePort: {{ $service.nodePort }}
+      {{- end }}
+  selector:
+    {{ include "db-labels" $ }}
+{{- end }}

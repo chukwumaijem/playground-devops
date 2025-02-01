@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    {{ include "result-ui-labels" . }}
+  name: {{ .Values.apps.result_ui.name }}-service
+spec:
+  type: NodePort
+  ports:
+    - name: {{ .Values.apps.result_ui.service.name }}
+      port: {{ .Values.apps.result_ui.service.port }}
+      targetPort: 80
+      {{- if eq .Values.apps.result_ui.service.type "NodePort" }}
+      nodePort: {{ .Values.apps.result_ui.service.nodePort }}
+      {{- end }}
+  selector:
+    {{ include "result-ui-labels" . }}

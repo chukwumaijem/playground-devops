@@ -1,0 +1,30 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    {{ include "db-labels" . }}
+  name: {{ .Values.apps.database.name }}
+spec:
+  replicas: {{ .Values.apps.database.replicaCount }}
+  selector:
+    matchLabels:
+      {{ include "db-labels" . }}
+  template:
+    metadata:
+      labels:
+        {{ include "db-labels" . }}
+    spec:
+      containers:
+        - image: "{{ .Values.apps.database.image.repository }}:{{ .Values.apps.database.image.tag | default "latest" }}"
+          name: {{ .Values.apps.database.name }}
+          env:
+            {{- include "db-envs" . | indent 8 }}
+          ports:
+            - containerPort: 5432
+              name: {{ .Values.apps.database.name }}
+          volumeMounts:
+            - mountPath: /var/lib/postgresql/data
+              name: {{ .Values.apps.database.volumeName }}
+      volumes:
+        - name: {{ .Values.apps.database.volumeName }}
+          emptyDir: {}

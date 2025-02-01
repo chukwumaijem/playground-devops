@@ -1,0 +1,22 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    {{ include "vote-ui-labels" . }}
+  name: {{ .Values.apps.vote_ui.name }}
+spec:
+  replicas: {{ .Values.apps.vote_ui.replicaCount }}
+  selector:
+    matchLabels:
+      {{ include "vote-ui-labels" . }}
+  template:
+    metadata:
+      labels:
+        {{ include "vote-ui-labels" . }}
+    spec:
+      containers:
+      - image: "{{ .Values.apps.vote_ui.image.repository }}:{{ .Values.apps.vote_ui.image.tag | default "latest" }}"
+        name: {{ .Values.apps.vote_ui.name }}
+        ports:
+        - containerPort: 80
+          name: {{ .Values.apps.vote_ui.name }}
