@@ -3,7 +3,7 @@ kind: Service
 metadata:
   labels:
     {{ include "redis-labels" . }}
-  name: {{ .Values.apps.redis.name }}-service
+  name: {{ .Values.product.name }}-{{ .Values.apps.redis.name }}-service
 spec:
   type: ClusterIP
   ports:

@@ -3,7 +3,7 @@ kind: Service
 metadata:
   labels:
     {{ include "vote-ui-labels" . }}
-  name: {{ .Values.apps.vote_ui.name }}-service
+  name: {{ .Values.product.name }}-{{ .Values.apps.vote_ui.name }}-service
 spec:
   type: {{ .Values.apps.vote_ui.service.type }}
   ports:

@@ -24,6 +24,7 @@ apps:
       # - type: NodePort
       #   name: 'db-nodeport-service'
       #   nodePort: 31002
+
   redis:
     name: redis
     volumeName: redis-data
@@ -32,6 +33,7 @@ apps:
       repository: redis
       pullPolicy: IfNotPresent
       tag: 'alpine'
+
   result_ui:
     name: result-ui
     replicaCount: 1
@@ -44,6 +46,7 @@ apps:
       port: 8081
       nodePort: 31001
       name: 'result'
+
   worker:
     name: worker
     replicaCount: 1
@@ -51,6 +54,7 @@ apps:
       repository: dockersamples/examplevotingapp_worker
       pullPolicy: IfNotPresent
       tag: ''
+
   vote_ui:
     name: vote-ui
     replicaCount: 1

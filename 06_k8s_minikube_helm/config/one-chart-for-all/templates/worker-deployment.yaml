@@ -3,7 +3,7 @@ kind: Deployment
 metadata:
   labels:
     {{ include "worker-labels" . }}
-  name: {{ .Values.apps.worker.name }}
+  name: {{ .Values.product.name }}-worker
 spec:
   replicas: {{ .Values.apps.worker.replicaCount }}
   selector:

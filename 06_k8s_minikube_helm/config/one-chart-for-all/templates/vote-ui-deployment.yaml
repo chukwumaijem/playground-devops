@@ -3,7 +3,7 @@ kind: Deployment
 metadata:
   labels:
     {{ include "vote-ui-labels" . }}
-  name: {{ .Values.apps.vote_ui.name }}
+  name: {{ .Values.product.name }}-vote-ui
 spec:
   replicas: {{ .Values.apps.vote_ui.replicaCount }}
   selector:

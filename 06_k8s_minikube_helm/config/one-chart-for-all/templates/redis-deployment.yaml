@@ -3,7 +3,7 @@ kind: Deployment
 metadata:
   labels:
     {{ include "redis-labels" . }}
-  name: {{ .Values.apps.redis.name }}
+  name: {{ .Values.product.name }}-redis
 spec:
   replicas: {{ .Values.apps.redis.replicaCount }}
   selector:

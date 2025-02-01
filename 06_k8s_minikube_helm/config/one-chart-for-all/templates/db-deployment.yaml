@@ -3,7 +3,7 @@ kind: Deployment
 metadata:
   labels:
     {{ include "db-labels" . }}
-  name: {{ .Values.apps.database.name }}
+  name: {{ .Values.product.name }}-db
 spec:
   replicas: {{ .Values.apps.database.replicaCount }}
   selector:

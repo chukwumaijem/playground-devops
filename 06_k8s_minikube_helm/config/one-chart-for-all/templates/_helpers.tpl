@@ -2,6 +2,7 @@
   app: {{.Values.product.name }}-{{ .Values.apps.database.name }}
 {{- end }}
 
+
 {{- define "db-envs" -}}
   {{- range .Values.apps.database.image.environment }}
     - name: {{ .name }}
@@ -16,14 +17,15 @@
 
 
 {{- define "result-ui-labels" -}}
-  app: {{ .Values.apps.result_ui.name }}
+  app: {{.Values.product.name }}-{{ .Values.apps.result_ui.name }}
 {{- end }}
 
+
 {{- define "worker-labels" -}}
-  app: {{ .Values.apps.worker.name }}
+  app: {{.Values.product.name }}-{{ .Values.apps.worker.name }}
 {{- end }}
 
 
 {{- define "vote-ui-labels" -}}
-  app: {{ .Values.apps.vote_ui.name }}
+  app: {{.Values.product.name }}-{{ .Values.apps.vote_ui.name }}
 {{- end }}

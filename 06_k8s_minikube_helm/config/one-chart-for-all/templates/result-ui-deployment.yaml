@@ -3,7 +3,7 @@ kind: Deployment
 metadata:
   labels:
     {{ include "result-ui-labels" . }}
-  name: {{ .Values.apps.result_ui.name }}
+  name: {{ .Values.product.name }}-result-ui
 spec:
   replicas: 1
   selector:

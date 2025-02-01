@@ -3,7 +3,7 @@ kind: Service
 metadata:
   labels:
     {{ include "result-ui-labels" . }}
-  name: {{ .Values.apps.result_ui.name }}-service
+  name: {{ .Values.product.name }}-{{ .Values.apps.result_ui.name }}-service
 spec:
   type: NodePort
   ports:
