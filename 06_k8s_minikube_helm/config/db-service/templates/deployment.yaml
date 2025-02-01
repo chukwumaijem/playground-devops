@@ -1,0 +1,30 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    {{ include "labels" . }}
+  name: {{ .Values.app.name }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      {{ include "labels" . }}
+  template:
+    metadata:
+      labels:
+        {{ include "labels" . }}
+    spec:
+      containers:
+        - image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default "latest" }}"
+          name: {{ .Values.app.name }}
+          env:
+            {{- include "envs" . | indent 8 }}
+          ports:
+            - containerPort: 5432
+              name: {{ .Values.app.name }}
+          volumeMounts:
+            - mountPath: /var/lib/postgresql/data
+              name: {{ .Values.app.volumeName }}
+      volumes:
+        - name: {{ .Values.app.volumeName }}
+          emptyDir: {}

@@ -1,0 +1,23 @@
+app:
+  name: db
+  volumeName: db-data
+
+replicaCount: 1
+
+image:
+  repository: postgres
+  pullPolicy: IfNotPresent
+  tag: '15-alpine'
+  environment:
+    - name: POSTGRES_USER
+      value: postgres
+    - name: POSTGRES_PASSWORD
+      value: postgres
+
+service:
+  - type: ClusterIP
+    name: 'db-cluster-service'
+  # helps to expose the service outside the cluster for migrations if needed
+  # - type: NodePort
+  #   name: 'db-nodeport-service'
+  #   nodePort: 31002
