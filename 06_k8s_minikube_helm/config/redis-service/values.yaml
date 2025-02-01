@@ -1,0 +1,10 @@
+app:
+  name: redis
+  volumeName: redis-data
+
+replicaCount: 1
+
+image:
+  repository: redis
+  pullPolicy: IfNotPresent
+  tag: 'alpine'
