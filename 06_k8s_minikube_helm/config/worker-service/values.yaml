@@ -1,0 +1,9 @@
+app:
+  name: worker
+
+replicaCount: 1
+
+image:
+  repository: dockersamples/examplevotingapp_worker
+  pullPolicy: IfNotPresent
+  tag: ''
