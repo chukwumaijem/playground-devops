@@ -2,12 +2,18 @@ livedebugging {
   enabled = true
 }
 
+// Collect and forward logs to loki
 discovery.docker "linux" {
   host = "unix:///var/run/docker.sock"
 }
-
 discovery.relabel "logs_integrations_docker" {
     targets = []
+
+    rule {
+        source_labels = ["__meta_docker_container_label_loki_enable"]
+        regex         = "(?i)false|0|disabled|no"
+        action        = "drop"
+    }
 
     rule {
         source_labels = ["__meta_docker_container_name"]
@@ -44,11 +50,33 @@ loki.source.docker "default" {
     host       = "unix:///var/run/docker.sock"
     targets    = discovery.docker.linux.targets
     forward_to = [loki.write.grafana_loki.receiver]
-    relabel_rules    = discovery.relabel.logs_integrations_docker.rules
+    relabel_rules = discovery.relabel.logs_integrations_docker.rules
 }
-
 loki.write "grafana_loki" {
     endpoint {
         url = env("LOKI_URL")
+    }
+}
+
+// Collect and forward metrics to prometheus
+prometheus.scrape "node" {
+    targets = [{"__address__" = "node_exporter:9100"}]
+    forward_to = [prometheus.relabel.metrics.receiver]
+}
+prometheus.scrape "cadvisor" {
+    targets = [{"__address__" = "cadvisor:8080"}]
+    forward_to = [prometheus.relabel.metrics.receiver]
+}
+prometheus.relabel "metrics" {
+    rule {
+        target_label = "node"
+        replacement = "app-server"
+    }
+
+    forward_to = [prometheus.remote_write.grafana_prometheus.receiver]
+}
+prometheus.remote_write "grafana_prometheus" {
+    endpoint {
+        url = env("PROMETHEUS_URL")
     }
 }

@@ -13,48 +13,39 @@ services:
       - --server.http.listen-addr=0.0.0.0:12345
       - --storage.path=/var/lib/alloy/data
       - /etc/alloy/config.alloy
-    ports:
-      - '12345:12345'
     deploy:
       mode: global
     env_file:
       - ./docker/alloy/.env
     labels:
-      - 'service_group=monitoring'
-      - 'prometheus_enable=true'
       - 'loki_enable=false'
+      - 'service_group=monitoring'
       - 'product_name=voting-app'
       - 'app_name=alloy'
       - 'app_environment=production'
 
   cadvisor:
-    image: gcr.io/cadvisor/cadvisor:v0.47.2
+    image: gcr.io/cadvisor/cadvisor:v0.50.0
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - /sys:/sys
       - /var/lib/docker:/var/lib/docker
-    ports:
-      - '8080:8080' # Expose for Prometheus
     deploy:
       replicas: 1
     labels:
-      - 'service_group=monitoring'
-      - 'prometheus_enable=true'
       - 'loki_enable=false'
+      - 'service_group=monitoring'
       - 'product_name=voting-app'
       - 'app_name=cadvisor'
       - 'app_environment=production'
 
   node_exporter:
-    image: prom/node-exporter:v1.5.0
-    ports:
-      - '9100:9100' # Expose for Prometheus
+    image: prom/node-exporter:v1.9.0
     deploy:
       mode: global
     labels:
-      - 'service_group=monitoring'
-      - 'prometheus_enable=true'
       - 'loki_enable=false'
+      - 'service_group=monitoring'
       - 'product_name=voting-app'
       - 'app_name=node-exporter'
       - 'app_environment=production'
@@ -69,9 +60,8 @@ services:
     networks:
       - backend
     labels:
-      - 'service_group=storage'
-      - 'prometheus_enable=false'
       - 'loki_enable=false'
+      - 'service_group=storage'
       - 'product_name=voting-app'
       - 'app_name=db'
       - 'app_environment=production'
@@ -82,9 +72,8 @@ services:
       - frontend
       - backend
     labels:
-      - 'service_group=storage'
-      - 'prometheus_enable=false'
       - 'loki_enable=false'
+      - 'service_group=storage'
       - 'product_name=voting-app'
       - 'app_name=redis'
       - 'app_environment=production'
@@ -96,9 +85,8 @@ services:
     networks:
       - backend
     labels:
-      - 'service_group=application'
-      - 'prometheus_enable=true'
       - 'loki_enable=true'
+      - 'service_group=application'
       - 'product_name=voting-app'
       - 'app_name=result'
       - 'app_environment=production'
@@ -112,9 +100,8 @@ services:
     deploy:
       replicas: 2
     labels:
-      - 'service_group=application'
-      - 'prometheus_enable=true'
       - 'loki_enable=true'
+      - 'service_group=application'
       - 'product_name=voting-app'
       - 'app_name=vote'
       - 'app_environment=production'
@@ -127,9 +114,8 @@ services:
     deploy:
       replicas: 2
     labels:
-      - 'service_group=application'
-      - 'prometheus_enable=true'
       - 'loki_enable=true'
+      - 'service_group=application'
       - 'product_name=voting-app'
       - 'app_name=worker'
       - 'app_environment=production'

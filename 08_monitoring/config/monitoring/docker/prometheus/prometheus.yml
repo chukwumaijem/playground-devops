@@ -16,52 +16,20 @@ scrape_configs:
     static_configs:
       - targets: ['localhost:9090']
 
-  # 2. Monitor system metrics from node-exporter
+  # 2. Monitor local node-exporter
   - job_name: 'node'
-    file_sd_configs:
-      - files:
-        - 'targets/nodes.yml'
-        refresh_interval: 5m
+    metrics_path: /metrics
     relabel_configs:
-      # Extract environment from hostname
-      - source_labels: [__address__]
-        regex: '.*staging.*'
-        target_label: 'environment'
-        replacement: 'staging'
-      - source_labels: [__address__]
-        regex: '.*prod.*'
-        target_label: 'environment'
-        replacement: 'production'
-      # Keep product label from file
-      - source_labels: [product]
-        target_label: 'product'
+      - target_label: node
+        replacement: monitor
+    static_configs:
+      - targets: ['node_exporter:9100']
 
-  # 3. Monitor container metrics from cAdvisor
+  # 3. Monitor local cAdvisor
   - job_name: 'cadvisor'
-    file_sd_configs:
-      - files:
-        - 'targets/cadvisor.yml'
-        refresh_interval: 5m
+    metrics_path: /metrics
     relabel_configs:
-      # Extract environment from hostname
-      - source_labels: [__address__]
-        regex: '.*staging.*'
-        target_label: 'environment'
-        replacement: 'staging'
-      - source_labels: [__address__]
-        regex: '.*prod.*'
-        target_label: 'environment'
-        replacement: 'production'
-      # Keep product label from file
-      - source_labels: [product]
-        target_label: 'product'
-
-  # 4. Monitor Docker services using file-based service discovery
-  - job_name: 'docker-services'
-    file_sd_configs:
-      - files:
-        - 'targets/services.yml'
-        refresh_interval: 5s
-    relabel_configs:
-      - source_labels: [service]
-        target_label: 'service'
+      - target_label: node
+        replacement: monitor
+    static_configs:
+      - targets: ['cadvisor:8080']

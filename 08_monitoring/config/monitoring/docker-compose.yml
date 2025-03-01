@@ -1,6 +1,6 @@
 services:
   alertmanager:
-    image: prom/alertmanager:v0.27.0
+    image: prom/alertmanager:v0.28.0
     volumes:
       - ./docker/alertmanager/alertmanager.yml:/etc/alertmanager/alertmanager.yml
       - alertmanager_data:/alertmanager
@@ -11,8 +11,7 @@ services:
       - '--storage.path=/alertmanager'
     labels:
       - 'service_group=monitoring'
-      - 'prometheus_enable=true'
-      - 'product_name=monitor'
+      - 'node_name=monitor'
       - 'app_name=alertmanager'
 
   caddy:
@@ -28,12 +27,11 @@ services:
       - ./docker/caddy/.env
     labels:
       - 'service_group=monitoring'
-      - 'prometheus_enable=true'
-      - 'product_name=monitor'
+      - 'node_name=monitor'
       - 'app_name=caddy'
 
   cadvisor:
-    image: gcr.io/cadvisor/cadvisor:v0.47.2
+    image: gcr.io/cadvisor/cadvisor:v0.50.0
     volumes:
       - /:/rootfs:ro
       - /var/run:/var/run:ro
@@ -45,12 +43,11 @@ services:
       mode: global
     labels:
       - 'service_group=monitoring'
-      - 'prometheus_enable=true'
-      - 'product_name=monitor'
+      - 'node_name=monitor'
       - 'app_name=cadvisor'
 
   grafana:
-    image: grafana/grafana:10.3.3
+    image: grafana/grafana:11.5.2
     volumes:
       - grafana_data:/var/lib/grafana
       - ./docker/grafana/provisioning:/etc/grafana/provisioning
@@ -60,28 +57,11 @@ services:
       - ./docker/grafana/.env
     labels:
       - 'service_group=monitoring'
-      - 'prometheus_enable=true'
-      - 'product_name=monitor'
+      - 'node_name=monitor'
       - 'app_name=grafana'
     depends_on:
       - prometheus
       - loki
-
-  node_exporter:
-    image: prom/node-exporter:v1.5.0
-    volumes:
-      - /:/host:ro,rslave
-    command:
-      - '--path.rootfs=/host'
-    ports:
-      - '9100:9100'
-    deploy:
-      mode: global
-    labels:
-      - 'service_group=monitoring'
-      - 'prometheus_enable=true'
-      - 'product_name=monitor'
-      - 'app_name=node-exporter'
 
   loki:
     image: grafana/loki:3.4.2
@@ -96,32 +76,42 @@ services:
       - '9096:9096'
     labels:
       - 'service_group=monitoring'
-      - 'prometheus_enable=true'
-      - 'product_name=monitor'
+      - 'node_name=monitor'
       - 'app_name=loki'
 
+  node_exporter:
+    image: prom/node-exporter:v1.9.0
+    volumes:
+      - /:/host:ro,rslave
+    command:
+      - '--path.rootfs=/host'
+    ports:
+      - '9100:9100'
+    deploy:
+      mode: global
+    labels:
+      - 'service_group=monitoring'
+      - 'node_name=monitor'
+      - 'app_name=node-exporter'
+
   prometheus:
-    image: prom/prometheus:v2.49.1
+    image: prom/prometheus:v3.2.0
     command:
       - '--config.file=/etc/prometheus/prometheus.yml'
       - '--storage.tsdb.path=/prometheus'
       - '--web.console.libraries=/usr/share/prometheus/console_libraries'
       - '--web.console.templates=/usr/share/prometheus/consoles'
-      - '--enable-feature=expand-external-labels'
+      - '--web.enable-remote-write-receiver'
     volumes:
       - ./docker/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
-      - ./docker/prometheus/targets:/etc/prometheus/targets
       - prometheus_data:/prometheus
     ports:
       - '9090:9090'
     depends_on:
       - alertmanager
-    env_file:
-      - ./docker/prometheus/.env
     labels:
       - 'service_group=monitoring'
-      - 'prometheus_enable=true'
-      - 'product_name=monitor'
+      - 'node_name=monitor'
       - 'app_name=prometheus'
 
 volumes:
