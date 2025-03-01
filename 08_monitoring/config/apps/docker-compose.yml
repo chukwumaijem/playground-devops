@@ -17,6 +17,8 @@ services:
       mode: global
     env_file:
       - ./docker/alloy/.env
+    ports:
+      - 12345:12345
     labels:
       - 'loki_enable=false'
       - 'service_group=monitoring'
@@ -27,11 +29,14 @@ services:
   cadvisor:
     image: gcr.io/cadvisor/cadvisor:v0.50.0
     volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
-      - /sys:/sys
-      - /var/lib/docker:/var/lib/docker
+      - /:/rootfs:ro
+      - /var/run:/var/run:ro
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
     deploy:
       replicas: 1
+    ports:
+      - 8080:8080
     labels:
       - 'loki_enable=false'
       - 'service_group=monitoring'
@@ -41,6 +46,12 @@ services:
 
   node_exporter:
     image: prom/node-exporter:v1.9.0
+    volumes:
+      - /:/host:ro,rslave
+    command:
+      - '--path.rootfs=/host'
+    ports:
+      - "9100:9100"
     deploy:
       mode: global
     labels:

@@ -69,10 +69,14 @@ prometheus.scrape "cadvisor" {
 }
 prometheus.relabel "metrics" {
     rule {
+        source_labels = ["__name__"]
+        regex = ".*"
+        action = "keep"
+    }
+    rule {
         target_label = "node"
         replacement = "app-server"
     }
-
     forward_to = [prometheus.remote_write.grafana_prometheus.receiver]
 }
 prometheus.remote_write "grafana_prometheus" {
