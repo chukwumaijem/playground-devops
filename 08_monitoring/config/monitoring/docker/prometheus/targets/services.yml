@@ -1,0 +1,7 @@
+- targets:
+    - 'prometheus:9090'
+    - 'alertmanager:9093'
+    - 'grafana:3000'
+    - 'loki:3100'
+  labels:
+    service: monitoring

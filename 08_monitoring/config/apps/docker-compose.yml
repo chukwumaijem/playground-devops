@@ -1,0 +1,142 @@
+version: '3.9'
+
+services:
+  alloy:
+    image: grafana/alloy:v1.7.1
+    volumes:
+      - ./docker/alloy:/etc/alloy
+      - /var/log:/var/log
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+      - /var/run/docker.sock:/var/run/docker.sock
+    command:
+      - run
+      - --server.http.listen-addr=0.0.0.0:12345
+      - --storage.path=/var/lib/alloy/data
+      - /etc/alloy/config.alloy
+    ports:
+      - '12345:12345'
+    deploy:
+      mode: global
+    env_file:
+      - ./docker/alloy/.env
+    labels:
+      - 'service_group=monitoring'
+      - 'prometheus_enable=true'
+      - 'loki_enable=false'
+      - 'product_name=voting-app'
+      - 'app_name=alloy'
+      - 'app_environment=production'
+
+  cadvisor:
+    image: gcr.io/cadvisor/cadvisor:v0.47.2
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /sys:/sys
+      - /var/lib/docker:/var/lib/docker
+    ports:
+      - '8080:8080' # Expose for Prometheus
+    deploy:
+      replicas: 1
+    labels:
+      - 'service_group=monitoring'
+      - 'prometheus_enable=true'
+      - 'loki_enable=false'
+      - 'product_name=voting-app'
+      - 'app_name=cadvisor'
+      - 'app_environment=production'
+
+  node_exporter:
+    image: prom/node-exporter:v1.5.0
+    ports:
+      - '9100:9100' # Expose for Prometheus
+    deploy:
+      mode: global
+    labels:
+      - 'service_group=monitoring'
+      - 'prometheus_enable=true'
+      - 'loki_enable=false'
+      - 'product_name=voting-app'
+      - 'app_name=node-exporter'
+      - 'app_environment=production'
+
+  db:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_USER: 'postgres'
+      POSTGRES_PASSWORD: 'postgres'
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    networks:
+      - backend
+    labels:
+      - 'service_group=storage'
+      - 'prometheus_enable=false'
+      - 'loki_enable=false'
+      - 'product_name=voting-app'
+      - 'app_name=db'
+      - 'app_environment=production'
+
+  redis:
+    image: redis:alpine
+    networks:
+      - frontend
+      - backend
+    labels:
+      - 'service_group=storage'
+      - 'prometheus_enable=false'
+      - 'loki_enable=false'
+      - 'product_name=voting-app'
+      - 'app_name=redis'
+      - 'app_environment=production'
+
+  result:
+    image: dockersamples/examplevotingapp_result
+    ports:
+      - 8082:80
+    networks:
+      - backend
+    labels:
+      - 'service_group=application'
+      - 'prometheus_enable=true'
+      - 'loki_enable=true'
+      - 'product_name=voting-app'
+      - 'app_name=result'
+      - 'app_environment=production'
+
+  vote:
+    image: dockersamples/examplevotingapp_vote
+    ports:
+      - 8081:80
+    networks:
+      - frontend
+    deploy:
+      replicas: 2
+    labels:
+      - 'service_group=application'
+      - 'prometheus_enable=true'
+      - 'loki_enable=true'
+      - 'product_name=voting-app'
+      - 'app_name=vote'
+      - 'app_environment=production'
+
+  worker:
+    image: dockersamples/examplevotingapp_worker
+    networks:
+      - frontend
+      - backend
+    deploy:
+      replicas: 2
+    labels:
+      - 'service_group=application'
+      - 'prometheus_enable=true'
+      - 'loki_enable=true'
+      - 'product_name=voting-app'
+      - 'app_name=worker'
+      - 'app_environment=production'
+
+networks:
+  frontend:
+  backend:
+
+volumes:
+  db-data:

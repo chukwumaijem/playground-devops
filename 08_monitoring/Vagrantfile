@@ -1,0 +1,50 @@
+Vagrant.configure("2") do |config|
+  config.vm.define "app_server" do |vps_one|
+    vps_one.vm.box = "ubuntu/jammy64"
+    vps_one.vm.hostname = "app-server"
+
+    vps_one.vm.provider "virtualbox" do |vb|
+      vb.name = "app_server"
+      vb.memory = "2048"
+    end
+
+    vps_one.vm.provision "shell", inline: <<-SHELL
+      sudo apt-get update
+      sudo apt-get install -y docker.io
+      sudo usermod -aG docker vagrant
+      sudo systemctl enable docker
+      sudo systemctl start docker
+      docker swarm init --advertise-addr $(hostname -I | awk '{print $2}')
+    SHELL
+
+    vps_one.vm.synced_folder "./config/apps", "/home/vagrant/project"
+    vps_one.vm.network "private_network", ip: "192.168.56.6"
+  end
+
+  config.vm.define "monitor" do |vps_two|
+    vps_two.vm.box = "ubuntu/jammy64"
+    vps_two.vm.hostname = "monitor"
+
+    vps_two.vm.provider "virtualbox" do |vb|
+      vb.name = "monitor"
+      vb.memory = "2048"
+    end
+
+    vps_two.vm.provision "shell", inline: <<-SHELL
+      sudo apt-get update
+      sudo apt-get install -y docker.io
+      sudo usermod -aG docker vagrant
+      sudo systemctl enable docker
+      sudo systemctl start docker
+      docker swarm init --advertise-addr $(hostname -I | awk '{print $2}')
+    SHELL
+
+    vps_two.vm.synced_folder "./config/monitoring", "/home/vagrant/project"
+    vps_two.vm.network "private_network", ip: "192.168.56.7"
+  end
+end
+
+
+# drop logs for services without loki.enable=true
+# setup alloy to push metrics to prometheus
+# drop metrics for services without prometheus.enable=true
