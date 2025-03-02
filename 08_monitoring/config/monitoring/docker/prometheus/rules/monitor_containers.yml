@@ -1,0 +1,17 @@
+groups:
+  - name: Monitor Container Alerts
+    rules:
+      - alert: MonitoringContainerDown
+        expr: |
+          container_start_time_seconds{container_label_service_group="monitoring"} unless container_start_time_seconds{container_label_service_group="monitoring"} offset 1m
+        for: 0m
+        labels:
+          severity: critical
+        annotations:
+          summary: '{{ $labels.container_label_app_name }} monitoring service is down'
+          description: |
+            Monitoring container has stopped
+            App: {{ $labels.container_label_app_name }}
+            Stack: {{ $labels.container_label_com_docker_stack_namespace }}
+            Service: {{ $labels.container_label_com_docker_swarm_service_name }}
+            Node: {{ $labels.node }}

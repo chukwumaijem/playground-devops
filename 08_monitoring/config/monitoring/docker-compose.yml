@@ -2,13 +2,14 @@ services:
   alertmanager:
     image: prom/alertmanager:v0.28.0
     volumes:
-      - ./docker/alertmanager/alertmanager.yml:/etc/alertmanager/alertmanager.yml
+      - ./docker/alertmanager/alertmanager.yml:/etc/alertmanager/alertmanager.yml.template
+      - ./docker/alertmanager/entrypoint.sh:/entrypoint.sh
       - alertmanager_data:/alertmanager
     ports:
       - '9093:9093'
-    command:
-      - '--config.file=/etc/alertmanager/alertmanager.yml'
-      - '--storage.path=/alertmanager'
+    entrypoint: ["/bin/sh", "/entrypoint.sh"]
+    env_file:
+      - ./docker/alertmanager/.env
     labels:
       - 'service_group=monitoring'
       - 'node_name=monitor'
@@ -103,7 +104,8 @@ services:
       - '--web.console.templates=/usr/share/prometheus/consoles'
       - '--web.enable-remote-write-receiver'
     volumes:
-      - ./docker/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+      - ./docker/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./docker/prometheus/rules:/etc/prometheus/rules:ro
       - prometheus_data:/prometheus
     ports:
       - '9090:9090'

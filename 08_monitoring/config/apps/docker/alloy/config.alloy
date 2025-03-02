@@ -77,6 +77,10 @@ prometheus.relabel "metrics" {
         target_label = "node"
         replacement = "app-server"
     }
+    rule {
+        target_label = "job"
+        replacement = "node"
+    }
     forward_to = [prometheus.remote_write.grafana_prometheus.receiver]
 }
 prometheus.remote_write "grafana_prometheus" {

@@ -1,0 +1,38 @@
+groups:
+  - name: App Container Alerts
+    rules:
+      - alert: AppContainerDown
+        expr: |
+          absent(container_start_time_seconds{
+            container_label_service_group="application",
+            container_label_product_name="voting-app"
+          })
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: '{{ $labels.container_label_app_name }} service is down'
+          description: |
+            Application container has stopped
+            App: {{ $labels.container_label_app_name }}
+            Environment: {{ $labels.container_label_app_environment }}
+            Stack: {{ $labels.container_label_com_docker_stack_namespace }}
+            Service: {{ $labels.container_label_com_docker_swarm_service_name }}
+
+      - alert: AppContainerRestarted
+        expr: |
+          changes(container_start_time_seconds{
+            container_label_service_group="application",
+            container_label_product_name="voting-app"
+          }[5m]) > 0
+        for: 0m
+        labels:
+          severity: warning
+        annotations:
+          summary: '{{ $labels.container_label_app_name }} service restarted'
+          description: |
+            Application container has restarted
+            App: {{ $labels.container_label_app_name }}
+            Environment: {{ $labels.container_label_app_environment }}
+            Stack: {{ $labels.container_label_com_docker_stack_namespace }}
+            Service: {{ $labels.container_label_com_docker_swarm_service_name }}
