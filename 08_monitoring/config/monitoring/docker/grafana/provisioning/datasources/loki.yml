@@ -10,6 +10,6 @@ datasources:
       maxLines: 1000
       derivedFields:
         - datasourceUid: Prometheus
-          matcherRegex: "(?:container_name=\")([^\"]+)"
+          matcherRegex: '(?:container_name=")([^"]+)'
           name: container
-          url: "$${__value.raw}"
+          url: '$${__value.raw}'

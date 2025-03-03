@@ -8,6 +8,6 @@ datasources:
     url: http://prometheus:9090
     jsonData:
       httpMethod: POST
-      timeInterval: "15s"
+      timeInterval: '15s'
     version: 1
     editable: false
