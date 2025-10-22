@@ -51,7 +51,7 @@
             "uid": "P8E80F9AEF21F6940"
           },
           "editorMode": "builder",
-          "expr": "{stack_namespace=~\"$stack\", environment=~\"$env\", product_name=~\"$product\", app_name=~\"$app\"}",
+          "expr": "{environment=~\"$env\", product_name=~\"$product\", app_name=~\"$app\", host_name=~\"$host_name\"}",
           "queryType": "range",
           "refId": "A"
         }
@@ -76,35 +76,11 @@
           "type": "loki",
           "uid": "P8E80F9AEF21F6940"
         },
-        "definition": "label_values(stack_namespace)",
-        "hide": 0,
-        "includeAll": true,
-        "label": "Stack",
-        "multi": false,
-        "name": "stack",
-        "options": [],
-        "query": "label_values(stack_namespace)",
-        "refresh": 1,
-        "regex": "",
-        "skipUrlSync": false,
-        "sort": 1,
-        "type": "query"
-      },
-      {
-        "current": {
-          "selected": false,
-          "text": "All",
-          "value": "$__all"
-        },
-        "datasource": {
-          "type": "loki",
-          "uid": "P8E80F9AEF21F6940"
-        },
         "definition": "label_values(environment)",
         "hide": 0,
         "includeAll": true,
         "label": "Environment",
-        "multi": false,
+        "multi": true,
         "name": "env",
         "options": [],
         "query": "label_values(environment)",
@@ -128,10 +104,34 @@
         "hide": 0,
         "includeAll": true,
         "label": "Product",
-        "multi": false,
+        "multi": true,
         "name": "product",
         "options": [],
         "query": "label_values(product_name)",
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 1,
+        "type": "query"
+      },
+      {
+        "current": {
+          "selected": false,
+          "text": "All",
+          "value": "$__all"
+        },
+        "datasource": {
+          "type": "loki",
+          "uid": "P8E80F9AEF21F6940"
+        },
+        "definition": "label_values(host_name)",
+        "hide": 0,
+        "includeAll": true,
+        "label": "HostName",
+        "multi": true,
+        "name": "host_name",
+        "options": [],
+        "query": "label_values(host_name)",
         "refresh": 1,
         "regex": "",
         "skipUrlSync": false,
@@ -152,7 +152,7 @@
         "hide": 0,
         "includeAll": true,
         "label": "Application",
-        "multi": false,
+        "multi": true,
         "name": "app",
         "options": [],
         "query": "label_values(app_name)",

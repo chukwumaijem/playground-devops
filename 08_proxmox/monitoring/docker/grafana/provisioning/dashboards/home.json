@@ -139,7 +139,7 @@
             "uid": "PBFA97CFB590B2093"
           },
           "editorMode": "code",
-          "expr": "100 - (avg by (node) (rate(node_cpu_seconds_total{mode=\"idle\",node=\"$node\",job=\"node\"}[5m])) * 100)",
+          "expr": "100 - (avg by (hostname) (rate(node_cpu_seconds_total{mode=\"idle\",hostname=\"$node\",job=\"node\"}[5m])) * 100)",
           "legendFormat": "CPU Usage",
           "range": true,
           "refId": "A"
@@ -232,7 +232,7 @@
             "uid": "PBFA97CFB590B2093"
           },
           "editorMode": "code",
-          "expr": "node_memory_MemTotal_bytes{node=\"$node\"} - node_memory_MemAvailable_bytes{node=\"$node\"}",
+          "expr": "node_memory_MemTotal_bytes{hostname=\"$node\"} - node_memory_MemAvailable_bytes{hostname=\"$node\"}",
           "legendFormat": "Memory Used",
           "range": true,
           "refId": "A"
@@ -243,7 +243,7 @@
             "uid": "PBFA97CFB590B2093"
           },
           "editorMode": "code",
-          "expr": "node_memory_MemTotal_bytes{node=\"$node\"}",
+          "expr": "node_memory_MemTotal_bytes{hostname=\"$node\"}",
           "hide": false,
           "legendFormat": "Total Memory",
           "range": true,
@@ -337,7 +337,7 @@
             "uid": "PBFA97CFB590B2093"
           },
           "editorMode": "code",
-          "expr": "sum by (node) (node_filesystem_size_bytes{node=\"$node\",mountpoint=\"/\"} - node_filesystem_avail_bytes{node=\"$node\",mountpoint=\"/\"})",
+          "expr": "sum by (hostname) (node_filesystem_size_bytes{hostname=\"$node\",mountpoint=\"/\"} - node_filesystem_avail_bytes{hostname=\"$node\",mountpoint=\"/\"})",
           "legendFormat": "Disk Used",
           "range": true,
           "refId": "A"
@@ -348,7 +348,7 @@
             "uid": "PBFA97CFB590B2093"
           },
           "editorMode": "code",
-          "expr": "sum by (node) (node_filesystem_size_bytes{node=\"$node\",mountpoint=\"/\"})",
+          "expr": "sum by (hostname) (node_filesystem_size_bytes{hostname=\"$node\",mountpoint=\"/\"})",
           "hide": false,
           "legendFormat": "Total Disk",
           "range": true,
@@ -438,7 +438,7 @@
             "uid": "PBFA97CFB590B2093"
           },
           "editorMode": "code",
-          "expr": "rate(node_network_receive_bytes_total{node=\"$node\",device!~\"lo|veth.*|docker.*|br.*\"}[5m])",
+          "expr": "rate(node_network_receive_bytes_total{hostname=\"$node\",device!~\"lo|veth.*|docker.*|br.*\"}[5m])",
           "legendFormat": "Received",
           "range": true,
           "refId": "A"
@@ -449,7 +449,7 @@
             "uid": "PBFA97CFB590B2093"
           },
           "editorMode": "code",
-          "expr": "rate(node_network_transmit_bytes_total{node=\"$node\",device!~\"lo|veth.*|docker.*|br.*\"}[5m])",
+          "expr": "rate(node_network_transmit_bytes_total{hostname=\"$node\",device!~\"lo|veth.*|docker.*|br.*\"}[5m])",
           "hide": false,
           "legendFormat": "Transmitted",
           "range": true,
@@ -556,7 +556,7 @@
             "uid": "PBFA97CFB590B2093"
           },
           "editorMode": "code",
-          "expr": "sum by (name) (rate(container_cpu_usage_seconds_total{node=\"$node\"}[1m])) * 100",
+          "expr": "sum by (name) (rate(container_cpu_usage_seconds_total{hostname=\"$node\"}[1m])) * 100",
           "legendFormat": "{{name}}",
           "range": true,
           "refId": "A"
@@ -649,7 +649,7 @@
             "uid": "PBFA97CFB590B2093"
           },
           "editorMode": "code",
-          "expr": "container_memory_usage_bytes{node=\"$node\"}",
+          "expr": "container_memory_usage_bytes{hostname=\"$node\"}",
           "legendFormat": "{{name}}",
           "range": true,
           "refId": "A"
@@ -675,7 +675,7 @@
           "type": "prometheus",
           "uid": "PBFA97CFB590B2093"
         },
-        "definition": "label_values(node)",
+        "definition": "label_values(hostname)",
         "hide": 0,
         "includeAll": false,
         "label": "Node",
@@ -683,7 +683,7 @@
         "name": "node",
         "options": [],
         "query": {
-          "query": "label_values(node)",
+          "query": "label_values(hostname)",
           "refId": "PrometheusVariableQueryEditor-VariableQuery"
         },
         "refresh": 1,

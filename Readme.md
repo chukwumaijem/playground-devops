@@ -1,4 +1,4 @@
-# Vagrant Playground
+# DevOps Playground
 
 My Vagrant Playground for testing/learning.
 

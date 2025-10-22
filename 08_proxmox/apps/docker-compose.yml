@@ -1,10 +1,15 @@
-version: '3.9'
+configs:
+  alloy_config:
+    file: ./config.alloy
 
 services:
   alloy:
     image: grafana/alloy:v1.7.1
+    hostname: "{{ .Node.Hostname }}"
+    configs:
+      - source: alloy_config
+        target: /etc/alloy/config.alloy
     volumes:
-      - ./docker/alloy:/etc/alloy
       - /var/log:/var/log
       - /var/lib/docker/containers:/var/lib/docker/containers:ro
       - /var/run/docker.sock:/var/run/docker.sock
@@ -17,12 +22,10 @@ services:
       mode: global
     env_file:
       - ./docker/alloy/.env
-    ports:
-      - 12345:12345
     labels:
       - 'loki_enable=false'
       - 'service_group=monitoring'
-      - 'product_name=voting-app'
+      - 'product_name=docker-samples'
       - 'app_name=alloy'
       - 'app_environment=production'
 
@@ -34,13 +37,11 @@ services:
       - /sys:/sys:ro
       - /var/lib/docker/:/var/lib/docker:ro
     deploy:
-      replicas: 1
-    ports:
-      - 8080:8080
+      mode: global
     labels:
       - 'loki_enable=false'
       - 'service_group=monitoring'
-      - 'product_name=voting-app'
+      - 'product_name=docker-samples'
       - 'app_name=cadvisor'
       - 'app_environment=production'
 
@@ -50,15 +51,26 @@ services:
       - /:/host:ro,rslave
     command:
       - '--path.rootfs=/host'
-    ports:
-      - "9100:9100"
     deploy:
       mode: global
     labels:
       - 'loki_enable=false'
       - 'service_group=monitoring'
-      - 'product_name=voting-app'
+      - 'product_name=docker-samples'
       - 'app_name=node-exporter'
+      - 'app_environment=production'
+
+  redis:
+    image: redis:alpine
+    deploy:
+      placement:
+        constraints:
+          - node.labels.private != true
+    labels:
+      - 'loki_enable=true'
+      - 'service_group=application'
+      - 'product_name=docker-samples'
+      - 'app_name=redis'
       - 'app_environment=production'
 
   db:
@@ -68,72 +80,74 @@ services:
       POSTGRES_PASSWORD: 'postgres'
     volumes:
       - db-data:/var/lib/postgresql/data
-    networks:
-      - backend
-    labels:
-      - 'loki_enable=false'
-      - 'service_group=storage'
-      - 'product_name=voting-app'
-      - 'app_name=db'
-      - 'app_environment=production'
-
-  redis:
-    image: redis:alpine
-    networks:
-      - frontend
-      - backend
-    labels:
-      - 'loki_enable=false'
-      - 'service_group=storage'
-      - 'product_name=voting-app'
-      - 'app_name=redis'
-      - 'app_environment=production'
-
-  result:
-    image: dockersamples/examplevotingapp_result
-    ports:
-      - 8082:80
-    networks:
-      - backend
+    deploy:
+      placement:
+        constraints:
+          - node.labels.private != true
     labels:
       - 'loki_enable=true'
       - 'service_group=application'
-      - 'product_name=voting-app'
-      - 'app_name=result'
+      - 'product_name=docker-samples'
+      - 'app_name=db'
       - 'app_environment=production'
 
   vote:
     image: dockersamples/examplevotingapp_vote
     ports:
-      - 8081:80
-    networks:
-      - frontend
+      - 5500:80
     deploy:
       replicas: 2
+      placement:
+        constraints:
+          - node.labels.private != true
     labels:
       - 'loki_enable=true'
       - 'service_group=application'
-      - 'product_name=voting-app'
+      - 'product_name=docker-samples'
       - 'app_name=vote'
+      - 'app_environment=production'
+
+  result:
+    image: dockersamples/examplevotingapp_result
+    ports:
+      - 5000:80
+    deploy:
+      placement:
+        constraints:
+          - node.labels.private != true
+    labels:
+      - 'loki_enable=true'
+      - 'service_group=application'
+      - 'product_name=docker-samples'
+      - 'app_name=result'
+      - 'app_environment=production'
+
+  result-customer-1:
+    image: dockersamples/examplevotingapp_result
+    deploy:
+      placement:
+        constraints:
+          - node.labels.customer == one
+    labels:
+      - 'loki_enable=true'
+      - 'service_group=application'
+      - 'product_name=docker-samples'
+      - 'app_name=result-customer-1'
       - 'app_environment=production'
 
   worker:
     image: dockersamples/examplevotingapp_worker
-    networks:
-      - frontend
-      - backend
     deploy:
       replicas: 2
+      placement:
+        constraints:
+          - node.labels.private != true
     labels:
       - 'loki_enable=true'
       - 'service_group=application'
-      - 'product_name=voting-app'
+      - 'product_name=docker-samples'
       - 'app_name=worker'
       - 'app_environment=production'
-
-networks:
-  frontend:
-  backend:
 
 volumes:
   db-data:
