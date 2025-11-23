@@ -15,3 +15,12 @@ docker stack deploy -c docker-compose.logging.yml logging
 docker stack deploy -c docker-compose.app-backend.yml app-backend
 docker stack deploy -c docker-compose.app-vote.yml app-vote
 docker stack deploy -c docker-compose.app-result.yml app-result
+
+# Access the apps
+
+For proxmox setup without dns, just app these to you main systems /etc/hosts
+
+<proxmox-vm-ip> vote.local
+<proxmox-vm-ip> result.local
+
+NOTE: Use the IP of the manager node where caddy is deployed
