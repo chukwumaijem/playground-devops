@@ -6,14 +6,17 @@ services:
     networks:
       - backend
       - proxy
+    deploy:
+      replicas: 1
+      labels:
+        - "caddy=vote.local"
+        - "caddy.reverse_proxy={{upstreams 80}}"
     labels:
       - "loki_enable=true"
       - "service_group=application"
       - "product_name=docker-samples"
       - "app_name=vote"
       - "app_environment=production"
-      - "caddy=vote.local"
-      - "caddy.reverse_proxy={{upstreams 80}}"
 
 volumes:
   db-data:
