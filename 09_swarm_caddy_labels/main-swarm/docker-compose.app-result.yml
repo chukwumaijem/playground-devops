@@ -1,0 +1,25 @@
+services:
+  result:
+    image: dockersamples/examplevotingapp_result
+    # ports:
+    #   - 5000:80
+    networks:
+      - backend
+      - proxy
+    labels:
+      - "loki_enable=true"
+      - "service_group=application"
+      - "product_name=docker-samples"
+      - "app_name=result"
+      - "app_environment=production"
+      - "caddy=result.local"
+      - "caddy.reverse_proxy={{upstreams 80}}"
+
+volumes:
+  db-data:
+
+networks:
+  backend:
+    external: true
+  proxy:
+    external: true

@@ -23,8 +23,8 @@ services:
       - POSTGRES_USER=root
       - POSTGRES_PASSWORD=postgres
       - POSTGRES_DB=zitadel
-    ports:
-      - "5432:5432"
+    # ports:
+    #   - "5432:5432"
     networks:
       - "zitadel"
     healthcheck:

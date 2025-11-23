@@ -1,0 +1,46 @@
+services:
+  redis:
+    image: redis:alpine
+    networks:
+      - backend
+    labels:
+      - "loki_enable=true"
+      - "service_group=application"
+      - "product_name=docker-samples"
+      - "app_name=redis"
+      - "app_environment=production"
+
+  db:
+    image: postgres:15-alpine
+    networks:
+      - backend
+    environment:
+      POSTGRES_USER: "postgres"
+      POSTGRES_PASSWORD: "postgres"
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    labels:
+      - "loki_enable=true"
+      - "service_group=application"
+      - "product_name=docker-samples"
+      - "app_name=db"
+      - "app_environment=production"
+
+  worker:
+    image: dockersamples/examplevotingapp_worker
+    networks:
+      - backend
+    labels:
+      - "loki_enable=true"
+      - "service_group=application"
+      - "product_name=docker-samples"
+      - "app_name=worker"
+      - "app_environment=production"
+
+volumes:
+  db-data:
+
+networks:
+  backend:
+    driver: overlay
+    attachable: true

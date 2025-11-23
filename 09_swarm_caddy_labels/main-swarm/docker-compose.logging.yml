@@ -1,0 +1,63 @@
+configs:
+  alloy-config:
+    file: ./docker/alloy/config.alloy
+
+services:
+  alloy:
+    image: grafana/alloy:v1.7.1
+    command:
+      - run
+      - /etc/alloy/config.alloy
+    configs:
+      - source: alloy-config
+        target: /etc/alloy/config.alloy
+    networks:
+      - logging
+    deploy:
+      mode: global
+    env_file:
+      - ./docker/alloy/.env
+    volumes:
+      - /var/log:/var/log
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+      - /var/run/docker.sock:/var/run/docker.sock
+    restart: unless-stopped
+
+  cadvisor:
+    image: gcr.io/cadvisor/cadvisor:v0.50.0
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:rw
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+    networks:
+      - logging
+    deploy:
+      mode: global
+    labels:
+      - "loki_enable=true"
+      - "service_group=logging"
+      - "app_name=cadvisor"
+      - "app_environment=${ENV_NAME}"
+    restart: unless-stopped
+
+  node_exporter:
+    image: prom/node-exporter:v1.9.0
+    restart: unless-stopped
+    volumes:
+      - /:/host:ro,rslave
+    command:
+      - "--path.rootfs=/host"
+    networks:
+      - logging
+    deploy:
+      mode: global
+    labels:
+      - "loki_enable=true"
+      - "service_group=logging"
+      - "app_name=node-exporter"
+      - "app_environment=${ENV_NAME}"
+
+networks:
+  logging:
+    driver: overlay

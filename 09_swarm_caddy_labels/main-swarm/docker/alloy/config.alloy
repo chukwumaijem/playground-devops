@@ -1,0 +1,94 @@
+// Collect and forward logs to loki
+discovery.docker "linux" {
+  host = "unix:///var/run/docker.sock"
+}
+discovery.relabel "logs_integrations_docker" {
+    targets = []
+
+    rule {
+        source_labels = ["__meta_docker_container_label_loki_enable"]
+        regex         = "(?i)false|0|disabled|no"
+        action        = "drop"
+    }
+
+    rule {
+        source_labels = ["__meta_docker_container_name"]
+        regex         = "/(.*)"
+        target_label  = "container"
+    }
+
+    rule {
+        source_labels = ["__meta_docker_container_log_stream"]
+        target_label  = "stream"
+    }
+
+    rule {
+        source_labels = ["__meta_docker_container_label_app_name"]
+        target_label  = "app_name"
+    }
+
+    rule {
+        source_labels = ["__meta_docker_container_label_product_name"]
+        target_label  = "product_name"
+    }
+
+    rule {
+        source_labels = ["__meta_docker_container_label_app_environment"]
+        target_label  = "environment"
+    }
+
+    rule {
+        source_labels = ["__meta_docker_container_label_com_docker_stack_namespace"]
+        target_label  = "stack_namespace"
+    }
+
+    rule {
+        target_label  = "host_name"
+        replacement   = constants.hostname
+    }
+}
+
+
+loki.source.docker "default" {
+    host       = "unix:///var/run/docker.sock"
+    targets    = discovery.docker.linux.targets
+    forward_to = [loki.write.grafana_loki.receiver]
+
+    relabel_rules = discovery.relabel.logs_integrations_docker.rules
+}
+loki.write "grafana_loki" {
+    endpoint {
+        url = env("LOKI_URL")
+    }
+}
+
+// Collect and forward metrics to prometheus
+prometheus.scrape "node" {
+    targets = [{"__address__" = "node_exporter:9100"}]
+    forward_to = [prometheus.relabel.metrics.receiver]
+}
+prometheus.scrape "cadvisor" {
+    targets = [{"__address__" = "cadvisor:8080"}]
+    forward_to = [prometheus.relabel.metrics.receiver]
+}
+prometheus.relabel "metrics" {
+    rule {
+        source_labels = ["__name__"]
+        regex = ".*"
+        action = "keep"
+    }
+    rule {
+        target_label = "hostname"
+        replacement = constants.hostname
+    }
+    rule {
+        target_label = "job"
+        replacement = "node"
+    }
+    forward_to = [prometheus.remote_write.grafana_prometheus.receiver]
+}
+prometheus.remote_write "grafana_prometheus" {
+    endpoint {
+        url = env("PROMETHEUS_URL")
+    }
+}
