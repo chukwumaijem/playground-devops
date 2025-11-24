@@ -4,9 +4,9 @@ scp -r -i ./path/to/ssh/keys_file ./09_swarm_caddy_labels/main-swarm/ user@serve
 
 # create networks
 
-docker network create --driver overlay --attachable proxy
-docker network create --driver overlay --attachable logging
-docker network create --driver overlay --attachable backend
+- docker network create --driver overlay --attachable proxy
+- docker network create --driver overlay --attachable backend
+- docker network create --driver overlay logging
 
 # deploy stacks
 

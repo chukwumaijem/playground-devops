@@ -11,7 +11,7 @@ groups:
         labels:
           severity: critical
         annotations:
-          summary: '{{ $labels.container_label_app_name }} service is down'
+          summary: "{{ $labels.container_label_app_name }} service is down"
           description: |
             Application container has stopped
             App: {{ $labels.container_label_app_name }}
@@ -29,7 +29,7 @@ groups:
         labels:
           severity: warning
         annotations:
-          summary: '{{ $labels.container_label_app_name }} service restarted'
+          summary: "{{ $labels.container_label_app_name }} service restarted"
           description: |
             Application container has restarted
             App: {{ $labels.container_label_app_name }}

@@ -8,7 +8,7 @@ groups:
         labels:
           severity: critical
         annotations:
-          summary: '{{ $labels.container_label_app_name }} monitoring service is down'
+          summary: "{{ $labels.container_label_app_name }} monitoring service is down"
           description: |
             Monitoring container has stopped
             App: {{ $labels.container_label_app_name }}

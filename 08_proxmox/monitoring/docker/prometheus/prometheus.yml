@@ -9,30 +9,29 @@ alerting:
   alertmanagers:
     - scheme: http
       static_configs:
-        - targets: ['alertmanager:9093']
+        - targets: ["alertmanager:9093"]
       api_version: v2
 
 scrape_configs:
   # 1. Monitor Prometheus itself
-  - job_name: 'prometheus'
+  - job_name: "prometheus"
     static_configs:
-      - targets: ['localhost:9090']
+      - targets: ["localhost:9090"]
 
   # 2. Monitor local node-exporter
-  - job_name: 'node'
+  - job_name: "node"
     metrics_path: /metrics
     relabel_configs:
       - target_label: hostname
         replacement: monitor
     static_configs:
-      - targets: ['node_exporter:9100']
+      - targets: ["node_exporter:9100"]
 
   # 3. Monitor local cAdvisor
-  - job_name: 'cadvisor'
+  - job_name: "cadvisor"
     metrics_path: /metrics
     relabel_configs:
       - target_label: hostname
         replacement: monitor
     static_configs:
-      - targets: ['cadvisor:8080']
-
+      - targets: ["cadvisor:8080"]
