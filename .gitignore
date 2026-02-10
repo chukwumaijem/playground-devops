@@ -9,4 +9,4 @@ node_modules/
 !04_nomad/config/caddy/Caddyfile
 !04_nomad/config/caddy/data/.gitkeep
 !04_nomad/config/caddy/config/.gitkeep
-keys
+keys/
