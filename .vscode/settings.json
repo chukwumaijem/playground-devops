@@ -1,6 +1,10 @@
 {
   "cSpell.words": [
+    "Caddyfile",
+    "conntrack",
     "cpus",
+    "ctstate",
+    "curlimages",
     "dearmor",
     "dissite",
     "enmod",
@@ -9,6 +13,8 @@
     "inance",
     "keyrings",
     "mediplus",
+    "netfilter",
+    "noninteractive",
     "Virtualmin",
     "Webmin"
   ]

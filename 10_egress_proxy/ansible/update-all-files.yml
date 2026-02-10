@@ -1,0 +1,19 @@
+---
+# Copy config and compose files to the server.
+
+- name: Copy config files to server
+  hosts: web
+  remote_user: ubuntu
+
+  vars:
+    ansible_python_interpreter: /usr/bin/python3
+    ansible_host_key_checking: false
+    ansible_stdout_callback: yaml
+    # Local directory containing Caddyfile.egress, Dockerfile.egress, compose files.
+    # Default: parent of the playbook directory (project root when run from ansible/).
+    egress_proxy_src: "{{ playbook_dir }}/.."
+    # Destination directory on the server.
+    egress_proxy_dest: /home/ubuntu
+
+  roles:
+    - update-files

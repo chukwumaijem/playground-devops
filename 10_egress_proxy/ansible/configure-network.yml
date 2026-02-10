@@ -1,0 +1,19 @@
+---
+# Optional: add iptables rules for private destinations (e.g. managed DB)
+# or services that must not use a proxy connection and has known IP ranges
+# Primary egress blocking is handled by Docker's --internal flag on app-network.
+# This playbook is only needed if you have private destinations to whitelist.
+- name: Configure egress firewall (iptables companion for --internal networks)
+  hosts: web
+  remote_user: ubuntu
+
+  vars:
+    ansible_python_interpreter: /usr/bin/python3
+    ansible_host_key_checking: false
+    ansible_stdout_callback: yaml
+    # Uncomment and add your private subnets if containers need direct DB access:
+    # allowed_external_ips:
+    #   - "10.116.0.0/20"
+
+  roles:
+    - egress-firewall

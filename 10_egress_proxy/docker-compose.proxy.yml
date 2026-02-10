@@ -1,0 +1,20 @@
+services:
+  caddy-egress:
+    image: caddy-egress:forwardproxy-v1
+    build:
+      context: .
+      dockerfile: Dockerfile.egress
+    networks:
+      - proxy-egress
+      - app-network
+    deploy:
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == manager
+
+networks:
+  proxy-egress:
+    external: true
+  app-network:
+    external: true

@@ -1,0 +1,77 @@
+---
+# Companion iptables rules for Docker --internal overlay networks.
+#
+# Primary egress control is handled by Docker itself:
+#   - app-network is created with --internal → Docker blocks egress for containers on it
+#   - proxy-egress is NOT internal → Docker allows egress for the proxy
+#   - No container IP discovery needed. Survives restarts. Survives Docker daemon restarts.
+#
+# This role only adds DOCKER-USER rules for:
+#   1. ACCEPT ESTABLISHED,RELATED (return half of already-allowed connections; fast-path)
+#   2. ACCEPT → private destinations (optional, e.g. managed DB subnet)
+#   3. RETURN (hand back to Docker's own rules which enforce --internal)
+#
+# Why RETURN and not DROP? Docker's DOCKER-ISOLATION chains already block egress
+# for containers on --internal networks. A DROP here would also block the proxy.
+# RETURN lets Docker's own rules decide who can and can't egress.
+
+- name: Install iptables-persistent (non-interactive)
+  ansible.builtin.apt:
+    name: iptables-persistent
+    state: present
+  environment:
+    DEBIAN_FRONTEND: noninteractive
+  become: true
+
+- name: Flush DOCKER-USER chain
+  ansible.builtin.command:
+    cmd: iptables -F DOCKER-USER
+  become: true
+
+# Rule 1: Accept packets that belong to a connection we already allowed.
+# The kernel's conntrack marks every packet as NEW, ESTABLISHED, or RELATED.
+# Example: proxy sends a request to the internet (we allowed that) → the response
+# coming back is the same connection, return direction → conntrack marks it ESTABLISHED.
+# We ACCEPT it here so it doesn't have to walk Rule 2, Rule 3, and Docker's chains.
+# Security is unchanged: we're not allowing anything new, only the return half of
+# connections that were already permitted. This just short-circuits the path (fast-path).
+- name: "Rule 1: Accept established/related (return traffic for already-allowed connections)"
+  ansible.builtin.command:
+    cmd: iptables -A DOCKER-USER -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
+  become: true
+
+# Rule 2 (optional): Allow containers to reach private destinations directly.
+# DOCKER-USER is processed BEFORE Docker's --internal isolation rules.
+# An ACCEPT here overrides the --internal block for these specific destinations,
+# letting app containers reach e.g. a managed DB without going through the proxy.
+- name: "Rule 2: Allow containers → private destinations (e.g. DB)"
+  ansible.builtin.command:
+    cmd: iptables -A DOCKER-USER -d {{ item }} -j ACCEPT
+  loop: "{{ allowed_external_ips }}"
+  when: allowed_external_ips | length > 0
+  become: true
+
+# Rule 3: Hand back to Docker. Docker's own DOCKER-ISOLATION chains will:
+#   - Block egress for containers on --internal networks (app containers)
+#   - Allow egress for containers on non-internal networks (proxy)
+- name: "Rule 3: RETURN (let Docker enforce --internal network policy)"
+  ansible.builtin.command:
+    cmd: iptables -A DOCKER-USER -j RETURN
+  become: true
+
+# --- Verify and persist ---
+- name: Show final DOCKER-USER rules
+  ansible.builtin.command:
+    cmd: iptables -L DOCKER-USER -n -v --line-numbers
+  register: docker_user_final
+  changed_when: false
+  become: true
+
+- name: Display DOCKER-USER rules for verification
+  ansible.builtin.debug:
+    var: docker_user_final.stdout_lines
+
+- name: Save iptables rules for persistence across reboots
+  ansible.builtin.command:
+    cmd: netfilter-persistent save
+  become: true

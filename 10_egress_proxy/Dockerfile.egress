@@ -1,0 +1,14 @@
+# Build stage
+FROM caddy:2.10-builder AS builder
+
+RUN xcaddy build --with github.com/caddyserver/forwardproxy
+
+# Final stage
+FROM caddy:2.10-alpine
+
+COPY --from=builder /usr/bin/caddy /usr/bin/caddy
+COPY Caddyfile.egress /etc/caddy/Caddyfile
+
+EXPOSE 3128
+
+CMD ["caddy", "run", "--config", "/etc/caddy/Caddyfile"]

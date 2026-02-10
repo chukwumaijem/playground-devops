@@ -1,0 +1,17 @@
+:3128 {
+  log {
+    output stdout
+    format json
+  }
+
+  forward_proxy {
+    # Restrict to common web ports
+    ports 80 443
+
+    acl {
+      allow ifconfig.me
+
+      deny all
+    }
+  }
+}

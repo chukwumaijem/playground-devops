@@ -1,0 +1,38 @@
+---
+# Copy egress proxy config and compose files to the server.
+# Vars: egress_proxy_src (local dir), egress_proxy_dest (remote dir). See defaults/main.yml.
+
+- name: Ensure egress proxy directory exists on server
+  ansible.builtin.file:
+    path: "{{ egress_proxy_dest }}"
+    state: directory
+    mode: "0755"
+  become: true
+
+- name: Copy Caddyfile.egress
+  ansible.builtin.copy:
+    src: "{{ egress_proxy_src }}/Caddyfile.egress"
+    dest: "{{ egress_proxy_dest }}/Caddyfile.egress"
+    mode: "0644"
+  become: true
+
+- name: Copy Dockerfile.egress
+  ansible.builtin.copy:
+    src: "{{ egress_proxy_src }}/Dockerfile.egress"
+    dest: "{{ egress_proxy_dest }}/Dockerfile.egress"
+    mode: "0644"
+  become: true
+
+- name: Copy docker-compose.proxy.yml
+  ansible.builtin.copy:
+    src: "{{ egress_proxy_src }}/docker-compose.proxy.yml"
+    dest: "{{ egress_proxy_dest }}/docker-compose.proxy.yml"
+    mode: "0644"
+  become: true
+
+- name: Copy docker-compose.app.yml
+  ansible.builtin.copy:
+    src: "{{ egress_proxy_src }}/docker-compose.app.yml"
+    dest: "{{ egress_proxy_dest }}/docker-compose.app.yml"
+    mode: "0644"
+  become: true

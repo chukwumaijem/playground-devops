@@ -1,0 +1,47 @@
+services:
+  echo-server:
+    image: mendhak/http-https-echo
+    networks:
+      - app-network
+    environment:
+      - HTTP_PORT=8080
+    deploy:
+      replicas: 1
+
+  curlimages:
+    image: curlimages/curl
+    networks:
+      - app-network
+    environment:
+      - HTTP_PROXY=http://caddy-egress:3128
+      - HTTPS_PROXY=http://caddy-egress:3128
+      - NO_PROXY=localhost,127.0.0.1,echo-server
+    command:
+      - /bin/sh
+      - -c
+      - |
+        echo "Waiting for echo-server to be ready..."
+        sleep 5
+        i=0
+        while true
+        do
+          i=$$(expr $$i + 1)
+          ts=$$(date '+%Y-%m-%dT%H:%M:%S')
+          echo "===== Loop $$i @ $$ts ====="
+          echo "--- [1/3] External via proxy (ifconfig.me) [ALLOWED] ---"
+          curl -sS --connect-timeout 5 --max-time 10 https://ifconfig.me 2>&1 || true
+          echo
+          echo "--- [2/3] External via proxy (api.github.com) [BLOCKED] ---"
+          curl -sS --connect-timeout 5 --max-time 10 https://api.github.com 2>&1 || true
+          echo
+          echo "--- [3/3] Container-to-container DIRECT (echo-server, NO proxy) [ALLOWED] ---"
+          curl -sS --connect-timeout 5 --max-time 10 http://echo-server:8080/ping -H "Content-Type: text/plain" -d "hello from curlimages at $$ts" 2>&1 || true
+          echo
+          echo "===== End loop $$i ====="
+          echo
+          sleep 5
+        done
+
+networks:
+  app-network:
+    external: true
