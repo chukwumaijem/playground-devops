@@ -13,7 +13,7 @@
     ansible_stdout_callback: yaml
     # Uncomment and add your private subnets if containers need direct DB access:
     # allowed_external_ips:
-    #   - "10.116.0.0/20"
+    #   - "10.100.0.0/20"
 
   roles:
     - egress-firewall

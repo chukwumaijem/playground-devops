@@ -60,7 +60,7 @@ Set private destinations in the playbook or inventory:
 
 ```yaml
 allowed_external_ips:
-  - "10.116.0.0/20"
+  - "10.100.0.0/20"
 ```
 
 This is important for non HTTP traffic like (Postgres, MySQL, Redis), that must go direct. You will also need to add the hosts for these connections to the NO_PROXY list in your env vars.
