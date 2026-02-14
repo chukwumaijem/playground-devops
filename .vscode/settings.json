@@ -9,6 +9,8 @@
     "dissite",
     "enmod",
     "ensite",
+    "forwardproxy",
+    "gwbridge",
     "htpasswd",
     "inance",
     "keyrings",

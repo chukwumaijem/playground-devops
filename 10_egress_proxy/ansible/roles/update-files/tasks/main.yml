@@ -1,16 +1,15 @@
 ---
-# Copy egress proxy config and compose files to the server.
-# Vars: egress_proxy_src (local dir), egress_proxy_dest (remote dir). See defaults/main.yml.
+# Playbook must set: egress_proxy_src, egress_proxy_dest, caddy_proxy_bind_ip (for Caddy bind).
 
-- name: Ensure egress proxy directory exists on server
+- name: Ensure destination directory exists
   ansible.builtin.file:
     path: "{{ egress_proxy_dest }}"
     state: directory
     mode: "0755"
   become: true
 
-- name: Copy Caddyfile.egress
-  ansible.builtin.copy:
+- name: Deploy Caddyfile.egress (template with caddy_proxy_bind_ip for bind)
+  ansible.builtin.template:
     src: "{{ egress_proxy_src }}/Caddyfile.egress"
     dest: "{{ egress_proxy_dest }}/Caddyfile.egress"
     mode: "0644"

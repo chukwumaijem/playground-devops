@@ -7,7 +7,6 @@ RUN xcaddy build --with github.com/caddyserver/forwardproxy
 FROM caddy:2.10-alpine
 
 COPY --from=builder /usr/bin/caddy /usr/bin/caddy
-COPY Caddyfile.egress /etc/caddy/Caddyfile
 
 EXPOSE 3128
 

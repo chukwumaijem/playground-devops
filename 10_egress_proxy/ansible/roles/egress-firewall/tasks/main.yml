@@ -1,19 +1,15 @@
 ---
-# Companion iptables rules for Docker --internal overlay networks.
+# iptables DOCKER-USER rules for plan.md approach:
+#   - Caddy runs on the HOST (not in Docker). All Docker networks are non-internal.
+#   - We BLOCK all container egress to the internet (-o egress_interface DROP).
+#   - We ALLOW containers to reach specific destinations (e.g. DB subnet).
+#   - Container → host proxy uses INPUT; host proxy → internet uses OUTPUT (not blocked).
 #
-# Primary egress control is handled by Docker itself:
-#   - app-network is created with --internal → Docker blocks egress for containers on it
-#   - proxy-egress is NOT internal → Docker allows egress for the proxy
-#   - No container IP discovery needed. Survives restarts. Survives Docker daemon restarts.
-#
-# This role only adds DOCKER-USER rules for:
-#   1. ACCEPT ESTABLISHED,RELATED (return half of already-allowed connections; fast-path)
-#   2. ACCEPT → private destinations (optional, e.g. managed DB subnet)
-#   3. RETURN (hand back to Docker's own rules which enforce --internal)
-#
-# Why RETURN and not DROP? Docker's DOCKER-ISOLATION chains already block egress
-# for containers on --internal networks. A DROP here would also block the proxy.
-# RETURN lets Docker's own rules decide who can and can't egress.
+# Rule order (first match wins):
+#   1. ACCEPT ESTABLISHED,RELATED (return traffic for already-allowed connections)
+#   2. ACCEPT -d allowed_external_ips (e.g. database VPC subnet 10.106.0.0/20)
+#   3. DROP -o egress_interface (block all other container egress to internet)
+#   4. RETURN (hand the rest to Docker)
 
 - name: Install iptables-persistent (non-interactive)
   ansible.builtin.apt:
@@ -23,40 +19,89 @@
     DEBIAN_FRONTEND: noninteractive
   become: true
 
+- name: Verify egress interface exists
+  ansible.builtin.command:
+    cmd: ip link show {{ egress_interface }}
+  register: egress_iface_check
+  failed_when: false
+  changed_when: false
+  become: true
+
+- name: Fail if egress interface not found
+  ansible.builtin.fail:
+    msg: "Egress interface '{{ egress_interface }}' not found. Check 'ip route show default' on the host. Set egress_interface in playbook vars."
+  when: egress_iface_check.rc != 0
+
 - name: Flush DOCKER-USER chain
   ansible.builtin.command:
     cmd: iptables -F DOCKER-USER
   become: true
 
-# Rule 1: Accept packets that belong to a connection we already allowed.
-# The kernel's conntrack marks every packet as NEW, ESTABLISHED, or RELATED.
-# Example: proxy sends a request to the internet (we allowed that) → the response
-# coming back is the same connection, return direction → conntrack marks it ESTABLISHED.
-# We ACCEPT it here so it doesn't have to walk Rule 2, Rule 3, and Docker's chains.
-# Security is unchanged: we're not allowing anything new, only the return half of
-# connections that were already permitted. This just short-circuits the path (fast-path).
-- name: "Rule 1: Accept established/related (return traffic for already-allowed connections)"
+# Rule 1: Insert at position 1 so it stays first. Accept return traffic.
+- name: "Rule 1: Accept ESTABLISHED,RELATED (return traffic)"
   ansible.builtin.command:
-    cmd: iptables -A DOCKER-USER -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
+    cmd: iptables -I DOCKER-USER 1 -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
   become: true
 
-# Rule 2 (optional): Allow containers to reach private destinations directly.
-# DOCKER-USER is processed BEFORE Docker's --internal isolation rules.
-# An ACCEPT here overrides the --internal block for these specific destinations,
-# letting app containers reach e.g. a managed DB without going through the proxy.
-- name: "Rule 2: Allow containers → private destinations (e.g. DB)"
+# Rule 2: Allow containers to reach allowed destinations (e.g. database VPC subnet).
+- name: "Rule 2: Allow containers → allowed destinations (e.g. DB subnet)"
   ansible.builtin.command:
     cmd: iptables -A DOCKER-USER -d {{ item }} -j ACCEPT
   loop: "{{ allowed_external_ips }}"
-  when: allowed_external_ips | length > 0
+  when: allowed_external_ips | default([]) | length > 0
   become: true
 
-# Rule 3: Hand back to Docker. Docker's own DOCKER-ISOLATION chains will:
-#   - Block egress for containers on --internal networks (app containers)
-#   - Allow egress for containers on non-internal networks (proxy)
-- name: "Rule 3: RETURN (let Docker enforce --internal network policy)"
+# Rule 3: Block all other container egress to the internet.
+- name: "Rule 3: DROP container egress to internet (-o {{ egress_interface }})"
+  ansible.builtin.command:
+    cmd: iptables -A DOCKER-USER -o {{ egress_interface }} -j DROP
+  become: true
+
+# Rule 4: RETURN so any other traffic is handled by Docker's chains.
+- name: "Rule 4: RETURN (hand the rest to Docker)"
   ansible.builtin.command:
     cmd: iptables -A DOCKER-USER -j RETURN
+  become: true
+
+# --- INPUT chain: allow port 3128 only from proxy_allow_sources (e.g. docker0, docker_gwbridge), drop rest ---
+# Containers reach the proxy via host.docker.internal; connections from other hosts or from the node itself are dropped.
+- name: Create PROXY-INPUT chain if it does not exist
+  ansible.builtin.command:
+    cmd: iptables -N PROXY-INPUT
+  register: proxy_input_chain_create
+  failed_when: false
+  changed_when: proxy_input_chain_create.rc == 0
+  become: true
+
+- name: Flush PROXY-INPUT chain
+  ansible.builtin.command:
+    cmd: iptables -F PROXY-INPUT
+  become: true
+
+- name: "PROXY-INPUT: Allow port 3128 from allowed sources (e.g. docker0, docker_gwbridge)"
+  ansible.builtin.command:
+    cmd: iptables -A PROXY-INPUT -s {{ item }} -p tcp --dport 3128 -j ACCEPT
+  loop: "{{ proxy_allow_sources }}"
+  become: true
+
+- name: "PROXY-INPUT: Drop any other traffic to port 3128 (outside connections)"
+  ansible.builtin.command:
+    cmd: iptables -A PROXY-INPUT -p tcp --dport 3128 -j DROP
+  become: true
+
+- name: Remove existing jump to PROXY-INPUT from INPUT (for idempotency)
+  ansible.builtin.shell: |
+    while iptables -D INPUT -j PROXY-INPUT 2>/dev/null; do :; done
+  args:
+    executable: /bin/bash
+  register: proxy_input_remove_jump
+  failed_when: false
+  changed_when: proxy_input_remove_jump.rc == 0
+  become: true
+
+- name: Insert jump to PROXY-INPUT at start of INPUT chain
+  ansible.builtin.command:
+    cmd: iptables -I INPUT 1 -j PROXY-INPUT
   become: true
 
 # --- Verify and persist ---
@@ -67,9 +112,20 @@
   changed_when: false
   become: true
 
-- name: Display DOCKER-USER rules for verification
+- name: Show PROXY-INPUT rules
+  ansible.builtin.command:
+    cmd: iptables -L PROXY-INPUT -n -v --line-numbers
+  register: proxy_input_final
+  changed_when: false
+  become: true
+
+- name: Display DOCKER-USER and PROXY-INPUT rules for verification
   ansible.builtin.debug:
-    var: docker_user_final.stdout_lines
+    msg:
+      - "DOCKER-USER:"
+      - "{{ docker_user_final.stdout_lines }}"
+      - "PROXY-INPUT (port 3128: allow {{ proxy_allow_sources | join(', ') }}; drop rest):"
+      - "{{ proxy_input_final.stdout_lines }}"
 
 - name: Save iptables rules for persistence across reboots
   ansible.builtin.command:

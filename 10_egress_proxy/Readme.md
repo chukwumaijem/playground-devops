@@ -1,121 +1,99 @@
-# Egress choke point for apps
+# Egress proxy: one way out
 
-Only the Caddy egress proxy can reach the internet. All other containers must go through it via `HTTP_PROXY`/`HTTPS_PROXY`.
+Only the Caddy proxy is allowed to reach the internet. All other containers use it for outbound HTTP/HTTPS. Everything else is blocked by iptables.
 
-## How it works
+---
 
-Docker's `--internal` flag on an overlay network tells Docker to block external connectivity for containers on that network. The proxy is on both an internal network (to talk to apps and allow apps talk to it) and a non-internal network (to reach the internet). Docker allows egress only for containers that have at least one non-internal network.
+## What this does
 
-| Network        | Type                  | Who joins    | Purpose                         |
-| -------------- | --------------------- | ------------ | ------------------------------- |
-| `app-network`  | overlay, **internal** | proxy + apps | App <-> proxy communication     |
-| `proxy-egress` | overlay               | proxy only   | Enables proxy's internet access |
+- **Apps** set `HTTP_PROXY` / `HTTPS_PROXY` to the proxy. Their traffic goes: app → proxy → internet.
+- **Direct** outbound from app containers is **dropped** by the firewall.
+- **Proxy** runs on the host (with host networking) and listens on the Docker bridge so containers reach it as `host.docker.internal:3128`. Proxy needs to be run on each individual host using docker compose(not swarm), installed as direct binary(not tested).
+- **Access to the proxy** is restricted: only connections from Docker networks (e.g. overlay / `docker_gwbridge`) are allowed to port 3128. Other hosts (and direct curl from the node) cannot use the proxy.
 
-Traffic flow:
+---
 
-```
-App container (app-network, internal)
-  → HTTP CONNECT to caddy-egress:3128 (overlay, no iptables involved)
-  → Proxy container (app-network + proxy-egress)
-  → Proxy connects to target (docker_gwbridge → internet, Docker allows it)
+## Architecture (plain words)
 
-App container tries direct internet access
-  → docker_gwbridge → Docker blocks it (container is on internal network only)
-```
+1. **iptables (DOCKER-USER)**
+   Any packet leaving a container toward the internet is dropped, except:
+   - return traffic for already-open connections,
+   - traffic to `allowed_external_ips` (e.g. your DB subnet).
+
+2. **Proxy on the host**
+   Caddy runs via Docker Compose with **host network**. So it’s not in a container network namespace and isn’t affected by the DOCKER-USER drop. It can reach the internet normally.
+
+3. **Where the proxy listens**
+   Caddy binds to the **docker0** address. Containers use `host.docker.internal:3128`; that resolves to the host and hits the proxy on docker0.
+
+4. **Who can hit the proxy (PROXY-INPUT)**
+   Only these sources are allowed to connect to port 3128:
+   - **docker0** (172.17.0.0/16), **docker_gwbridge** (172.18.0.0/16) — so overlay/Swarm containers on the node can reach the proxy.
+     Everything else (e.g. another machine on the LAN, or curl from the node itself) is dropped or does not work.
+
+5. **Apps**
+   Your app stack runs on an overlay network (e.g. `app-network`). Containers set `HTTP_PROXY`/`HTTPS_PROXY` to `http://host.docker.internal:3128` and put local/private hosts in `NO_PROXY`.
+
+---
 
 ## Setup
 
-### 1. Create networks
+### 1. Push config with Ansible
 
-```bash
-# Non-internal: enables proxy's internet access
-docker network create --driver overlay --subnet 10.0.1.0/24 --attachable proxy-egress
-
-# Internal: blocks direct internet access for app containers
-docker network create --driver overlay --internal --subnet 10.0.2.0/24 --attachable app-network
-```
-
-### 2. Deploy the proxy
-
-```bash
-docker stack deploy -c docker-compose.proxy.yml proxy
-```
-
-### 3. Deploy apps
-
-```bash
-docker stack deploy -c docker-compose.app.yml app
-```
-
-### 4. (Optional) Ansible for private DB access
-
-If containers need to reach a private resource directly (e.g. managed DB), the Ansible role adds a DOCKER-USER ACCEPT rule that overrides the `--internal` block for specific destination subnets. Essentially this rule runs before the docker's rule that blocks internal network from reaching the internet, and allows your containers in the app-network to reach the specified IPs/subnets.
+From your machine (or a control host):
 
 ```bash
 cd ansible
-ansible-playbook -i inventory.txt configure-network.yml
+ansible-playbook -i inventory.txt update-all-files.yml   # Caddyfile, compose, Dockerfile
+ansible-playbook -i inventory.txt configure-network.yml  # iptables: egress block + proxy allow
 ```
 
-Set private destinations in the playbook or inventory:
+- **update-all-files** copies the require configs into the node and handles IP address substitution.
 
-```yaml
-allowed_external_ips:
-  - "10.100.0.0/20"
-```
+- **configure-network** sets DOCKER-USER (block container egress, allow `allowed_external_ips`) and PROXY-INPUT (allow 3128 only from docker0 and docker_gwbridge).
 
-This is important for non HTTP traffic like (Postgres, MySQL, Redis), that must go direct. You will also need to add the hosts for these connections to the NO_PROXY list in your env vars.
+Tune `configure-network.yml` if needed: `egress_interface`, `allowed_external_ips`, and `proxy_allow_sources` (the last two are derived from Ansible interface facts by default).
 
-| Check                                                                              | Expected                      |
-| ---------------------------------------------------------------------------------- | ----------------------------- |
-| App, no proxy: `curl https://google.com`                                           | Fails (blocked by --internal) |
-| App, with proxy: `curl -x http://caddy-egress:3128 https://google.com`             | Works                         |
-| App → private DB (if configured via iptables using the ansible script or manually) | Works without proxy           |
-| Proxy → internet directly                                                          | Works                         |
+### 2. On the proxy host: start the proxy
 
-## Troubleshooting
-
-### App can still reach the internet directly
-
-`app-network` is probably not internal. Check:
+Use **Compose** on the node where the proxy should run (not `docker stack deploy` — Swarm ignores host networking). From the directory where you pushed the files (e.g. `egress_proxy_dest`):
 
 ```bash
-docker network inspect app-network --format '{{.Internal}}'
+docker compose -f docker-compose.proxy.yml up -d
 ```
 
-If it prints `false`, recreate the network with `--internal`:
+Verify the proxy is up (e.g. `docker compose -f docker-compose.proxy.yml logs` or that app containers can reach the internet via the proxy).
+
+### 3. Deploy the app stack
+
+From the same (or another) node, with the same compose file you deployed via Ansible:
 
 ```bash
-docker stack rm app
-docker stack rm proxy
-docker network rm app-network
-docker network create --driver overlay --internal --subnet 10.0.1.0/24 --attachable app-network
-docker stack deploy -c docker-compose.proxy.yml proxy
 docker stack deploy -c docker-compose.app.yml app
 ```
 
-### App can't reach proxy
+App containers use `host.docker.internal:3128` as their proxy.
 
-Make sure the proxy is on `app-network` (see `docker-compose.proxy.yml`). caddy-egress service much be connected to both networks for DNS resolution and connectivity.
+### 4. (Optional) Private DB or other direct targets
 
-### Proxy can't reach the internet
+If containers must reach a private subnet (e.g. a DB) without going through the proxy, add that subnet to `allowed_external_ips` in `configure-network.yml` and re-run the playbook. Put those hosts in your app’s `NO_PROXY` so they’re not sent to the proxy.
 
-Make sure the proxy is on `proxy-egress` (non-internal). Check:
+---
 
-```bash
-docker network inspect proxy-egress --format '{{.Internal}}'
-# Must be: false
-```
+## Quick checks
 
-### Private DB not reachable
+| What you check                                                           | What you expect                            |
+| ------------------------------------------------------------------------ | ------------------------------------------ |
+| From app container: `curl https://ifconfig.me` (with proxy env)          | Your public IP; traffic went through proxy |
+| From app container: `curl https://google.com` without proxy              | Fails (blocked by iptables)                |
+| From another machine or from the node: `curl -x http://<proxy>:3128 ...` | Fails (PROXY-INPUT or no listener)         |
 
-Run the Ansible playbook with `allowed_external_ips` set. The DOCKER-USER ACCEPT rule is processed before Docker's --internal isolation, so it overrides the block for those specific subnets.
+---
 
-## Useful commands
+## Files you care about
 
-```bash
-# Check if a network is internal
-docker network inspect <network-name> --format '{{.Internal}}'
-
-# List DOCKER-USER rules
-sudo iptables -L DOCKER-USER -n -v --line-numbers
-```
+- **Caddyfile.egress** — Caddy config (Ansible fills in the bind address; usually docker0).
+- **docker-compose.proxy.yml** — Proxy service (host network). Run with `docker compose`, not `docker stack deploy`.
+- **docker-compose.app.yml** — App stack; sets `HTTP_PROXY`/`HTTPS_PROXY` to `host.docker.internal:3128`.
+- **ansible/configure-network.yml** — iptables (egress block + proxy allow list).
+- **ansible/update-all-files.yml** — Deploy Caddyfile, compose files, Dockerfile to the server.

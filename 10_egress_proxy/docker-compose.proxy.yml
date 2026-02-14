@@ -4,17 +4,9 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.egress
-    networks:
-      - proxy-egress
-      - app-network
-    deploy:
-      replicas: 1
-      placement:
-        constraints:
-          - node.role == manager
-
-networks:
-  proxy-egress:
-    external: true
-  app-network:
-    external: true
+    network_mode: host
+    volumes:
+      - ./Caddyfile.egress:/etc/caddy/Caddyfile
+    ports:
+      - 3128:3128
+    restart: always

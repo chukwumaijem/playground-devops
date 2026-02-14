@@ -1,9 +1,6 @@
 ---
-# Optional: add iptables rules for private destinations (e.g. managed DB)
-# or services that must not use a proxy connection and has known IP ranges
-# Primary egress blocking is handled by Docker's --internal flag on app-network.
-# This playbook is only needed if you have private destinations to whitelist.
-- name: Configure egress firewall (iptables companion for --internal networks)
+# iptables: block container egress, allow proxy (3128) from proxy_allow_sources only, allow allowed_external_ips.
+- name: Configure egress firewall (iptables)
   hosts: web
   remote_user: ubuntu
 
@@ -11,9 +8,11 @@
     ansible_python_interpreter: /usr/bin/python3
     ansible_host_key_checking: false
     ansible_stdout_callback: yaml
-    # Uncomment and add your private subnets if containers need direct DB access:
-    # allowed_external_ips:
-    #   - "10.100.0.0/20"
+    egress_interface: "{{ ansible_default_ipv4.interface | default('eth0') }}"
+    allowed_external_ips: ["192.168.0.160/24"] # db, etc.
+    # From Ansible: docker_gwbridge (172.18.0.0/16). Fallbacks if interface missing.
+    proxy_allow_sources:
+      - "{{ (((ansible_docker_gwbridge | default({})).ipv4 | default({})).address | default('172.18.0.1')).split('.')[:2] | join('.') }}.0.0/16"
 
   roles:
     - egress-firewall

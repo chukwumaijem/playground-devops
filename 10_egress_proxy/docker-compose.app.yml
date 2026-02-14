@@ -8,14 +8,14 @@ services:
     deploy:
       replicas: 1
 
-  curlimages:
+  curlimages_with_proxy:
     image: curlimages/curl
     networks:
       - app-network
     environment:
-      - HTTP_PROXY=http://caddy-egress:3128
-      - HTTPS_PROXY=http://caddy-egress:3128
-      - NO_PROXY=localhost,127.0.0.1,echo-server
+      - HTTP_PROXY=http://host.docker.internal:3128
+      - HTTPS_PROXY=http://host.docker.internal:3128
+      - NO_PROXY=localhost,127.0.0.1,echo-server,192.168.0.160
     command:
       - /bin/sh
       - -c
@@ -27,20 +27,66 @@ services:
         do
           i=$$(expr $$i + 1)
           ts=$$(date '+%Y-%m-%dT%H:%M:%S')
+          echo
+          echo
+          echo
           echo "===== Loop $$i @ $$ts ====="
-          echo "--- [1/3] External via proxy (ifconfig.me) [ALLOWED] ---"
+          echo
+          echo "--- [1/4] External via proxy (ifconfig.me) [ALLOWED] ---"
           curl -sS --connect-timeout 5 --max-time 10 https://ifconfig.me 2>&1 || true
+          sleep 2
           echo
-          echo "--- [2/3] External via proxy (api.github.com) [BLOCKED] ---"
+          echo
+          echo "--- [2/4] External via proxy (api.github.com) [BLOCKED] ---"
           curl -sS --connect-timeout 5 --max-time 10 https://api.github.com 2>&1 || true
+          sleep 2
           echo
-          echo "--- [3/3] Container-to-container DIRECT (echo-server, NO proxy) [ALLOWED] ---"
+          echo
+          echo "--- [3/4] Container-to-container DIRECT (echo-server, NO proxy) [ALLOWED] ---"
           curl -sS --connect-timeout 5 --max-time 10 http://echo-server:8080/ping -H "Content-Type: text/plain" -d "hello from curlimages at $$ts" 2>&1 || true
+          sleep 2
+          echo
+          echo
+          echo "--- [4/4] External Host (echo-server, NO proxy) [ALLOWED] ---"
+          curl -sS --connect-timeout 5 --max-time 10 http://192.168.0.160:8080/ping -H "Content-Type: text/plain" -d "hello from external host at $$ts" 2>&1 || true
+          sleep 2
           echo
           echo "===== End loop $$i ====="
+          sleep 5
+        done
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    deploy:
+      replicas: 1
+
+  curlimages_without_proxy:
+    image: curlimages/curl
+    networks:
+      - app-network
+    command:
+      - /bin/sh
+      - -c
+      - |
+        echo "Waiting for echo-server to be ready..."
+        sleep 5
+        i=0
+        while true
+        do
+          i=$$(expr $$i + 1)
+          ts=$$(date '+%Y-%m-%dT%H:%M:%S')
+          echo
+          echo
+          echo "===== Loop $$i @ $$ts ====="
+          echo
+          echo "--- [1/4] External request (ifconfig.me) [BLOCKED] ---"
+          curl -sS --connect-timeout 5 --max-time 10 https://ifconfig.me 2>&1 || true
           echo
           sleep 5
         done
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    deploy:
+      replicas: 1
 
 networks:
   app-network:

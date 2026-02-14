@@ -1,4 +1,8 @@
+# Bind address set by Ansible (update-files role). Usually 172.17.0.1 for docker0.
+
 :3128 {
+  bind {{ caddy_proxy_bind_ip }}
+
   log {
     output stdout
     format json

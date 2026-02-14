@@ -1,6 +1,5 @@
 ---
-# Copy config and compose files to the server.
-
+# Deploy Caddyfile (bind address), compose and Dockerfile. caddy_proxy_bind_ip is templated into Caddyfile only.
 - name: Copy config files to server
   hosts: web
   remote_user: ubuntu
@@ -9,11 +8,10 @@
     ansible_python_interpreter: /usr/bin/python3
     ansible_host_key_checking: false
     ansible_stdout_callback: yaml
-    # Local directory containing Caddyfile.egress, Dockerfile.egress, compose files.
-    # Default: parent of the playbook directory (project root when run from ansible/).
     egress_proxy_src: "{{ playbook_dir }}/.."
-    # Destination directory on the server.
     egress_proxy_dest: /home/ubuntu
+    # Bind on docker0 so Caddy is reachable via host.docker.internal (fallback if docker0 not present yet)
+    caddy_proxy_bind_ip: "{{ ansible_docker0.ipv4.address | default('172.17.0.1') }}"
 
   roles:
     - update-files
