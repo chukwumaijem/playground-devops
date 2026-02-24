@@ -39,7 +39,7 @@ Here's a summary of all the Docker images used across the curriculum, grouped by
 
 |     | #   | Project                                                                                |
 | --- | --- | -------------------------------------------------------------------------------------- |
-| [ ] | 1   | [Deploy Your First Stateless App](01_stateless_app/Readme.md)                          |
+| [x] | 1   | [Deploy Your First Stateless App](01_stateless_app/Readme.md)                          |
 | [ ] | 2   | [Configuration and Secrets Management](02_config_n_secrets/Readme.md)                  |
 | [ ] | 3   | [Exposing Apps with NodePort and LoadBalancer Services](03_k8s_services/Readme.md)     |
 | [ ] | 4   | [Persistent Storage with PVs and PVCs](04_k8s_volumes/Readme.md)                       |
