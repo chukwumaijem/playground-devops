@@ -1,0 +1,129 @@
+---
+- name: Require docker0 bind address for Squid
+  ansible.builtin.assert:
+    that:
+      - squid_proxy_bind_ip | length > 0
+    fail_msg: >-
+      squid_proxy_bind_ip is empty (no ansible_docker0 fact).
+      Install Docker first, or set squid_proxy_bind_ip explicitly.
+
+- name: Using Squid bind address
+  ansible.builtin.debug:
+    msg: 'Squid will bind {{ squid_proxy_bind_ip }}:{{ squid_proxy_port }}'
+
+- name: Install Squid
+  ansible.builtin.apt:
+    name: '{{ squid_package }}'
+    state: present
+    update_cache: true
+  become: true
+
+- name: Ensure allowlists directory exists
+  ansible.builtin.file:
+    path: /etc/squid/allowlists
+    state: directory
+    mode: '0755'
+  become: true
+
+- name: Deploy allowlists
+  ansible.builtin.copy:
+    src: allowlists/
+    dest: /etc/squid/allowlists/
+    mode: '0644'
+  become: true
+
+- name: Deploy squid.conf
+  ansible.builtin.template:
+    src: squid.conf.j2
+    dest: /etc/squid/squid.conf
+    mode: '0644'
+  become: true
+
+- name: Enable and restart Squid
+  ansible.builtin.systemd:
+    name: squid.service
+    enabled: true
+    state: restarted
+  become: true
+
+- name: Install iptables-persistent
+  ansible.builtin.apt:
+    name: iptables-persistent
+    state: present
+  environment:
+    DEBIAN_FRONTEND: noninteractive
+  become: true
+
+- name: Detect egress interface from default route
+  ansible.builtin.shell: ip -4 route show default | awk '{print $5; exit}'
+  args:
+    executable: /bin/bash
+  register: egress_iface_detect
+  changed_when: false
+  when: egress_interface | length == 0
+  become: true
+
+- name: Set egress_interface from default route
+  ansible.builtin.set_fact:
+    egress_interface: '{{ egress_iface_detect.stdout | trim }}'
+  when: egress_interface | length == 0
+
+- name: Require egress_interface
+  ansible.builtin.assert:
+    that:
+      - egress_interface | length > 0
+    fail_msg: 'Set egress_interface or check: ip -4 route show default'
+
+- name: Using egress interface
+  ansible.builtin.debug:
+    var: egress_interface
+
+- name: Flush DOCKER-USER
+  ansible.builtin.iptables:
+    chain: DOCKER-USER
+    flush: true
+  become: true
+
+- name: ACCEPT RELATED,ESTABLISHED
+  ansible.builtin.iptables:
+    chain: DOCKER-USER
+    ctstate: [ESTABLISHED, RELATED]
+    jump: ACCEPT
+  become: true
+
+- name: ACCEPT allowed_external
+  ansible.builtin.iptables:
+    chain: DOCKER-USER
+    protocol: '{{ item.proto | default("tcp") }}'
+    destination: '{{ item.cidr }}'
+    destination_port: '{{ item.port }}'
+    jump: ACCEPT
+  loop: '{{ allowed_external | default([]) }}'
+  become: true
+
+- name: DROP container egress on public interface
+  ansible.builtin.iptables:
+    chain: DOCKER-USER
+    out_interface: '{{ egress_interface }}'
+    jump: DROP
+  become: true
+
+- name: RETURN to Docker
+  ansible.builtin.iptables:
+    chain: DOCKER-USER
+    jump: RETURN
+  become: true
+
+- name: Show DOCKER-USER
+  ansible.builtin.command: iptables -L DOCKER-USER -n -v --line-numbers
+  register: docker_user
+  changed_when: false
+  become: true
+
+- name: DOCKER-USER rules
+  ansible.builtin.debug:
+    var: docker_user.stdout_lines
+
+- name: Save iptables
+  ansible.builtin.command: netfilter-persistent save
+  become: true

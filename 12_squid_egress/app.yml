@@ -1,0 +1,55 @@
+version: '3.8'
+
+services:
+  app_compliant:
+    image: curlimages/curl:latest
+    extra_hosts:
+      - 'host.docker.internal:host-gateway'
+    environment:
+      - http_proxy=http://host.docker.internal:3128
+      - https_proxy=http://host.docker.internal:3128
+    command: [
+        'sh',
+        '-c',
+        'fetch() {
+        echo "--- $$1 ---";
+        code=$$(curl -sS -o /tmp/b -w "%{http_code}" --connect-timeout 3 --max-time 5 "$$2" 2>/dev/null) || code=000;
+        if [ "$$code" = "200" ]; then head -c 120 /tmp/b; echo;
+        else echo "error http=$$code"; fi;
+        };
+        while true; do
+        fetch worldclockapi.com http://worldclockapi.com/api/json/utc/now;
+        fetch jsonplaceholder.typicode.com http://jsonplaceholder.typicode.com/todos/1;
+        echo;
+        sleep 5;
+        done',
+      ]
+    labels:
+      - 'loki_enable=true'
+      - 'service_group=egress_test'
+      - 'app_name=app_compliant'
+      - 'app_environment=${ENV_NAME}'
+
+  app_rogue:
+    image: curlimages/curl:latest
+    command: [
+        'sh',
+        '-c',
+        'fetch() {
+        echo "--- $$1 ---";
+        code=$$(curl -sS -o /tmp/b -w "%{http_code}" --connect-timeout 3 --max-time 5 "$$2" 2>/dev/null) || code=000;
+        if [ "$$code" = "200" ]; then head -c 120 /tmp/b; echo;
+        else echo "error http=$$code"; fi;
+        };
+        while true; do
+        fetch worldclockapi.com http://worldclockapi.com/api/json/utc/now;
+        fetch jsonplaceholder.typicode.com http://jsonplaceholder.typicode.com/todos/1;
+        echo;
+        sleep 5;
+        done',
+      ]
+    labels:
+      - 'loki_enable=true'
+      - 'service_group=egress_test'
+      - 'app_name=app_rogue'
+      - 'app_environment=${ENV_NAME}'

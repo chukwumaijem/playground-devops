@@ -1,0 +1,9 @@
+---
+# Override in the playbook if auto-detection is wrong.
+squid_package: squid
+squid_proxy_port: 3128
+# docker0 address (host.docker.internal / host-gateway)
+squid_proxy_bind_ip: "{{ ((ansible_docker0 | default({})).ipv4 | default({})).address | default('') }}"
+# Public NIC used by DOCKER-USER DROP
+egress_interface: "{{ ansible_default_ipv4.interface | default('') }}"
+allowed_external: []

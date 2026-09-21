@@ -55,3 +55,7 @@ The monitoring services is deployed on a separate vm. While the docker-samples a
 A Docker Swarm deployment using Caddy Docker Proxy for automatic service discovery and reverse proxy configuration via Docker labels. This project demonstrates a microservices architecture with automatic HTTPS and service routing.
 
 Here we reuse the monitoring server from the proxmox setup to receive logs from our logging stack. The logging stack (Grafana Alloy, cAdvisor, Node Exporter), backend stack (Redis, PostgreSQL, worker), and frontend stacks (vote and result stacks). Services are automatically discovered by Caddy through Docker labels, eliminating the need for manual reverse proxy configuration. The project uses overlay networks for service isolation.
+
+## 12 - Squid egress proxy
+
+Host Squid (apt/systemd) plus iptables `DOCKER-USER` so containers cannot reach the internet except via `HTTP_PROXY` to `host.docker.internal:3128`. Includes a Swarm demo stack (compliant vs rogue) and a minimal Ansible role. Sequel to project 10 (Caddy-based egress).
