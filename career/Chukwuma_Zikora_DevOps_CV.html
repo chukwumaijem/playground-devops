@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Chukwuma Zikora - DevOps / Platform Engineer</title>
+  <style>
+    :root {
+      --ink: #111;
+      --muted: #444;
+      --line: #222;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    @page {
+      size: A4;
+      margin: 14mm 14mm 14mm 14mm;
+    }
+
+    body {
+      font-family: "Calibri", "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+      color: var(--ink);
+      font-size: 10.2pt;
+      line-height: 1.32;
+      max-width: 210mm;
+      margin: 0 auto;
+      padding: 16mm 16mm;
+      background: #fff;
+    }
+
+    /* Header */
+    header {
+      text-align: center;
+      margin-bottom: 12px;
+      padding-bottom: 10px;
+      border-bottom: 1.5px solid var(--line);
+    }
+
+    h1 {
+      font-size: 18pt;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      line-height: 1.15;
+    }
+
+    .role {
+      font-size: 11pt;
+      font-weight: 600;
+      margin-top: 3px;
+      color: var(--ink);
+    }
+
+    .contact {
+      font-size: 9.2pt;
+      color: var(--muted);
+      margin-top: 6px;
+      line-height: 1.45;
+    }
+
+    .contact a {
+      color: var(--muted);
+      text-decoration: none;
+    }
+
+    /* Sections */
+    section { margin-top: 11px; }
+
+    h2 {
+      font-size: 10pt;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      border-bottom: 1px solid var(--line);
+      padding-bottom: 2px;
+      margin-bottom: 6px;
+    }
+
+    p { margin-bottom: 4px; }
+
+    /* Skills */
+    .skills { width: 100%; border-collapse: collapse; }
+    .skills td {
+      vertical-align: top;
+      padding: 1.5px 0;
+      font-size: 9.6pt;
+    }
+    .skills .label {
+      width: 28%;
+      font-weight: 700;
+      padding-right: 8px;
+      white-space: nowrap;
+    }
+    .skills .value { color: var(--ink); }
+
+    /* Entry blocks (title left, date right) */
+    .entry { margin-bottom: 8px; }
+
+    .entry-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 12px;
+    }
+
+    .entry-title {
+      font-weight: 700;
+      font-size: 10.4pt;
+    }
+
+    .entry-date {
+      font-size: 9.4pt;
+      color: var(--muted);
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    .entry-sub {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 12px;
+      font-size: 9.3pt;
+      color: var(--muted);
+      margin: 1px 0 3px;
+    }
+
+    .entry-sub .stack { font-style: italic; }
+
+    ul {
+      margin: 0;
+      padding-left: 16px;
+    }
+
+    li {
+      margin-bottom: 2px;
+      padding-left: 2px;
+    }
+
+    .intro {
+      font-size: 9.8pt;
+      margin-bottom: 6px;
+      color: var(--ink);
+    }
+
+    .edu-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 3px;
+    }
+
+    .edu-row .left strong { font-weight: 700; }
+    .edu-row .right {
+      color: var(--muted);
+      white-space: nowrap;
+      font-size: 9.4pt;
+    }
+
+    @media print {
+      body {
+        padding: 0;
+        max-width: none;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+      }
+      a { color: inherit; text-decoration: none; }
+      .entry { break-inside: avoid; }
+      h2 { break-after: avoid; }
+    }
+
+    @media screen {
+      body {
+        box-shadow: 0 0 0 1px #e5e5e5, 0 8px 24px rgba(0,0,0,.06);
+        margin: 24px auto;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>Chukwuma Zikora</h1>
+    <div class="role">DevOps / Platform Engineer</div>
+    <div class="contact">
+      Anambra, Nigeria · +234 703 131 0606 ·
+      <a href="mailto:chukwuma.zikora@gmail.com">chukwuma.zikora@gmail.com</a><br />
+      <a href="https://linkedin.com/in/chukwumazikora">linkedin.com/in/chukwumazikora</a> ·
+      <a href="https://github.com/chukwumaijem">github.com/chukwumaijem</a> ·
+      <a href="https://chukwumaijem.github.io">chukwumaijem.github.io</a>
+    </div>
+  </header>
+
+  <section>
+    <h2>Professional Summary</h2>
+    <p>
+      DevOps and Platform Engineer with 10+ years of software engineering experience, currently focused on
+      infrastructure automation, CI/CD pipeline design, cloud architecture, and container orchestration.
+      Proven record designing and operating deployment infrastructure for healthcare-grade SaaS systems.
+      Operate a self-hosted homelab covering Swarm orchestration, observability, and deny-by-default
+      egress security. Open to DevOps / Platform / SRE roles.
+    </p>
+  </section>
+
+  <section>
+    <h2>Core Skills</h2>
+    <table class="skills">
+      <tr>
+        <td class="label">Containers &amp; Orchestration</td>
+        <td class="value">Docker, Docker Swarm, Kubernetes, Helm, kubeadm</td>
+      </tr>
+      <tr>
+        <td class="label">CI/CD &amp; Automation</td>
+        <td class="value">GitHub Actions, GitLab CI/CD, CircleCI, Ansible, Vagrant</td>
+      </tr>
+      <tr>
+        <td class="label">Cloud &amp; Infrastructure</td>
+        <td class="value">AWS (Lambda, API Gateway), Proxmox, Linux (Ubuntu)</td>
+      </tr>
+      <tr>
+        <td class="label">Observability</td>
+        <td class="value">Prometheus, Grafana, Loki, Alertmanager, Grafana Alloy, cAdvisor</td>
+      </tr>
+      <tr>
+        <td class="label">Application Development</td>
+        <td class="value">React.js, Next.js, Node.js, NestJS, TypeScript, PostgreSQL, APIs</td>
+      </tr>
+    </table>
+  </section>
+
+  <section>
+    <h2>Infrastructure Projects</h2>
+    <p class="intro">
+      Homelab and platform labs:
+      <a href="https://github.com/chukwumaijem/playground-devops">github.com/chukwumaijem/playground-devops</a>
+    </p>
+
+    <div class="entry">
+      <div class="entry-head">
+        <div class="entry-title">Self-Hosted Platform Homelab - Proxmox + Swarm + Observability</div>
+        <div class="entry-date">2025 - Present</div>
+      </div>
+      <div class="entry-sub">
+        <span class="stack">Stack: Proxmox, Docker Swarm, Caddy Docker Proxy, Prometheus, Grafana, Loki, Alertmanager, Alloy</span>
+      </div>
+      <ul>
+        <li>Built a multi-VM Proxmox homelab: application Swarm cluster plus a dedicated monitoring VM, with overlay networks separating proxy, backend, and logging traffic.</li>
+        <li>Deployed multi-stack microservices with label-driven HTTPS routing via Caddy Docker Proxy (Cloudflare DNS / Let’s Encrypt) - no manual proxy rewrites per service.</li>
+        <li>Stood up Prometheus, Grafana, Loki, and Alertmanager with provisioned dashboards, container down/restart alerts, and Alloy shipping app-node logs to the monitoring VM.</li>
+      </ul>
+    </div>
+
+    <div class="entry">
+      <div class="entry-head">
+        <div class="entry-title">Deny-by-Default Container Egress Gateway</div>
+        <div class="entry-date">2025 - Present</div>
+      </div>
+      <div class="entry-sub">
+        <span class="stack">Stack: Ansible, Squid, iptables (DOCKER-USER), Docker Swarm</span>
+      </div>
+      <ul>
+        <li>Designed deny-by-default container egress: direct internet access is dropped; only traffic via a host Squid proxy (<code>HTTP_PROXY</code>) is allowed.</li>
+        <li>Automated install and hardening with Ansible - Squid, domain allowlists, <code>iptables-persistent</code>, and DOCKER-USER drop rules on the default-route interface.</li>
+        <li>Validated with a Swarm demo: compliant services succeed on allowlisted hosts; rogue containers that bypass the proxy fail.</li>
+      </ul>
+    </div>
+
+    <div class="entry">
+      <div class="entry-head">
+        <div class="entry-title">Kubernetes Multi-Service Packaging with Helm</div>
+        <div class="entry-date">2025 - Present</div>
+      </div>
+      <div class="entry-sub">
+        <span class="stack">Stack: Kubernetes (Minikube, MicroK8s), Helm, Docker Voting App</span>
+      </div>
+      <ul>
+        <li>Packaged a multi-tier voting application as Helm charts - both a single umbrella chart and per-service charts.</li>
+        <li>Practised chart structure, Go templating, values overrides, and install/upgrade workflows for consistent multi-environment deploys.</li>
+        <li>Complements hands-on cluster work with Minikube, MicroK8s, and kubeadm (multi-node).</li>
+      </ul>
+    </div>
+  </section>
+
+  <section>
+    <h2>Work Experience</h2>
+
+    <div class="entry">
+      <div class="entry-head">
+        <div class="entry-title">Senior Software Engineer | ShiftHealth</div>
+        <div class="entry-date">July 2020 - Present</div>
+      </div>
+      <div class="entry-sub">
+        <span>Remote | Healthcare automation platform (Zapier-style integration engine)</span>
+      </div>
+      <ul>
+        <li>Designed and built CI/CD pipeline infrastructure using GitHub Actions and Docker, reducing deployment cycle time and eliminating manual deployment errors across a multi-environment healthcare platform.</li>
+        <li>Migrated critical system components from traditional server infrastructure to AWS Serverless (Lambda, API Gateway), improving cost-efficiency and enabling elastic scaling for variable workloads.</li>
+        <li>Designed and implemented microservices architecture for the team and user management system, improving service isolation, scalability, and independent deployability.</li>
+        <li>Built and maintained healthcare system connectors and integration workflows for automated data exchange between clinical and administrative platforms.</li>
+        <li>Currently responsible for deployment supervision across fully automated infrastructure; all deployment pipelines are self-designed and self-maintained.</li>
+      </ul>
+    </div>
+
+    <div class="entry">
+      <div class="entry-head">
+        <div class="entry-title">Software Engineer | Unbird</div>
+        <div class="entry-date">July 2019 - June 2020</div>
+      </div>
+      <div class="entry-sub"><span>Remote</span></div>
+      <ul>
+        <li>Developed a real-time notification system using WebSockets and implemented granular team permission controls for secure, role-scoped access across multi-tenant workspaces.</li>
+      </ul>
+    </div>
+
+    <div class="entry">
+      <div class="entry-head">
+        <div class="entry-title">Freelance JavaScript Developer | Kwhen</div>
+        <div class="entry-date">September 2017 - June 2019</div>
+      </div>
+      <div class="entry-sub"><span>Remote | Event curation platform</span></div>
+      <ul>
+        <li>Integrated multiple third-party event partner APIs and implemented search/filter logic to expand content coverage and improve event discovery.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section>
+    <h2>Independent Products - BlockQueue Systems Ltd</h2>
+    <p class="intro">
+      Founder of BlockQueue Systems Limited. Built and shipped two production SaaS platforms as sole or
+      lead engineer, owning product architecture, infrastructure design, and cloud deployment.
+    </p>
+
+    <div class="entry">
+      <div class="entry-head">
+        <div class="entry-title">Lead Engineer - Property Governors</div>
+        <div class="entry-date">2025 - Present</div>
+      </div>
+      <div class="entry-sub">
+        <span><a href="https://propertygovernors.com">propertygovernors.com</a></span>
+        <span class="stack">Stack: Next.js, Node.js, PostgreSQL · Infra &amp; deployment owned end-to-end</span>
+      </div>
+      <ul>
+        <li>Designed and managed all cloud infrastructure and deployment pipelines for a live multi-sided property management SaaS serving users across Nigeria.</li>
+      </ul>
+    </div>
+
+    <div class="entry">
+      <div class="entry-head">
+        <div class="entry-title">Lead Engineer - FirmLyt</div>
+        <div class="entry-date">2024 - Present</div>
+      </div>
+      <div class="entry-sub">
+        <span><a href="https://firmlyt.com">firmlyt.com</a></span>
+        <span class="stack">Stack: Next.js, Node.js, PostgreSQL, AWS, Docker</span>
+      </div>
+      <ul>
+        <li>Handled end-to-end infrastructure design, CI/CD setup, and cloud deployment on AWS for a legal practice management SaaS.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section>
+    <h2>Open Source - github.com/blockqueue</h2>
+    <p class="intro">
+      Publishes self-hostable infrastructure tooling under the BlockQueue organisation on GitHub.
+    </p>
+
+    <div class="entry">
+      <div class="entry-head">
+        <div class="entry-title">Mailer</div>
+        <div class="entry-date">2025 - Present</div>
+      </div>
+      <div class="entry-sub">
+        <span><a href="https://github.com/blockqueue/mailer">github.com/blockqueue/mailer</a></span>
+        <span class="stack">TypeScript | Apache-2.0 | Docker</span>
+      </div>
+      <ul>
+        <li>Self-hostable email orchestration microservice with dual auth (API key + HMAC), rate limiting, YAML-driven config, and Docker deployment.</li>
+      </ul>
+    </div>
+
+    <div class="entry">
+      <div class="entry-head">
+        <div class="entry-title">BQ Queue</div>
+        <div class="entry-date">2026 - Present</div>
+      </div>
+      <div class="entry-sub">
+        <span><a href="https://github.com/blockqueue/bq-queue">github.com/blockqueue/bq-queue</a></span>
+        <span class="stack">TypeScript | Apache-2.0 | Docker Compose</span>
+      </div>
+      <ul>
+        <li>Self-hostable PostgreSQL-backed job queue and signed HTTP webhook delivery service with idempotency guarantees and full Docker Compose setup.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section>
+    <h2>Education &amp; Certifications</h2>
+    <div class="edu-row">
+      <div class="left">
+        <strong>Nnamdi Azikiwe University, Awka</strong> - B.Sc. Computer Science, Second Class Honours (Upper Division)
+      </div>
+    </div>
+    <div class="edu-row">
+      <div class="left"><strong>Udacity</strong> - Cloud DevOps Engineering Nanodegree</div>
+      <div class="right">July 2022</div>
+    </div>
+  </section>
+
+</body>
+</html>
